@@ -1,0 +1,19 @@
+{
+  "name": "sallad-bowl",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "dependencies": {
+    "hyperapp": "^1.2.10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonasstenberg/sallad-bowl.git"
+  },
+  "author": "Jonas Stenberg, Martin Wendt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jonasstenberg/sallad-bowl/issues"
+  },
+  "homepage": "https://github.com/jonasstenberg/sallad-bowl#readme"
+}
