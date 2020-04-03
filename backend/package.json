@@ -1,0 +1,27 @@
+{
+  "name": "sallad-bowl",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "ws": "^7.2.3"
+  },
+  "devDependencies": {
+    "standard": "^14.3.3"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "fix": "standard --fix",
+    "test": "standard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonasstenberg/sallad-bowl.git"
+  },
+  "author": "Jonas Stenberg, Martin Wendt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jonasstenberg/sallad-bowl/issues"
+  },
+  "homepage": "https://github.com/jonasstenberg/sallad-bowl#readme"
+}
