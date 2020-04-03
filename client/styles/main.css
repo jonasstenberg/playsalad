@@ -1,15 +1,17 @@
 @import normalize.css;
 
 :root {
-  /* Colors */
-  --orage: #ED6A5A;
+  /* Colors - main */
+  --orange: #ED6A5A;
   --yellow: #F4F1BB;
   --turquoise: #9BC1BC;
   --blue: #5CA4A9;
-  --gray: #E6EBE0;
+  --off-white: #E6EBE0;
+  --grey: #c1c1c1;
+  --dark-gray: #333333;
 }
 
-/* Fonts TODO: Download font files locally */
+/* Fonts TODO: Add font styles and download font files locally */
 @font-face {
   font-family: 'Dosis';
   font-style: normal;
@@ -34,14 +36,48 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+html {
+  font-size: 16px;
+}
+
 body {
+  font-size: 1.125rem;
   font-family: 'Open Sans', Verdana, sans-serif;
+  background: #fafafa;
 }
 
 h1,
 h2,
 h3 {
   font-family: 'Dosis', Verdana, sans-serif;
-  font-weight: 700;
 }
 
+h1 {
+  font-size: 3rem;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.caption {
+  font-size: 0.875rem;
+  font-weight: 300;
+}
+
+.splash {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  color: #fff;
+  background: var(--orange);
+  height: 100vh;
+}

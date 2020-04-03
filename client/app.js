@@ -1,8 +1,12 @@
-import { h, app } from "hyperapp"
+import { h, app } from "hyperapp";
+import state from './state/index';
+import actions from './actions/index';
 
-app(() => {}, {},
-    h("div", {}, [
-      h("h1", {}, 'Salladsskål'),
+import Splash from './components/Splash.js';
+
+app(() => state, actions,
+    h("main", {}, [
+      Splash(state, actions),
     ]),
   document.getElementById("app")
 )
