@@ -15,6 +15,6 @@
 .player-list__players {
   padding: 0;
   font-family: 'Dosis', Verdana, sans-serif;
-  font-size: 2rem;
+  font-weight: 600;
   list-style: none;
 }

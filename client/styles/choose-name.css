@@ -1,3 +1,7 @@
+.choose-name__heading {
+  font-weight: normal;
+}
+
 .choose-name__input {
   font-size: 2rem;
   text-align: center;

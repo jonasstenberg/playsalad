@@ -3,7 +3,7 @@ import { h } from 'hyperapp'
 export default (state, actions) => h('div', { class: 'player-list flex' }, [
   h('div', { class: 'player-list__teams' }, [
     h('div', { class: 'player-list__team' }, [
-      h('div', { class: 'player-list__team-name player-list__team-name--red' }, 'Team red'),
+      h('div', { class: 'player-list__team-name player-list__team-name--red caption' }, 'Team red'),
       h('ul', { class: 'player-list__players' }, [
         state.room && state.room.players && state.room.players.length
           ? state.room.players.map((player) => {
@@ -13,7 +13,7 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
       ])
     ]),
     h('div', { class: 'player-list__team' }, [
-      h('div', { class: 'player-list__team-name player-list__team-name--blue' }, 'Team blue'),
+      h('div', { class: 'player-list__team-name player-list__team-name--blue caption' }, 'Team blue'),
       h('ul', { class: 'player-list__players' }, [
         h('li', { class: 'player-list__player' }, 'Tegnell')
       ])

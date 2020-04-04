@@ -17,6 +17,8 @@ export default (state, actions) => {
     h(Route, {
       path: '/lobby/player-list',
       render: () => PlayerList(state, actions)
-    })
+    }),
+    // TODO: Fix back link
+    h('span', { class: 'return' }, 'Return')
   ])
 }
