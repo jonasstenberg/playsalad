@@ -5,12 +5,12 @@
   "main": "app.js",
   "dependencies": {
     "@hyperapp/router": "^0.7.2",
-    "hyperapp": "^1.2.10"
+    "hyperapp": "^1.2.5"
   },
   "scripts": {
     "start": "parcel index.html",
-    "standard:fix": "standard --fix",
     "standard": "standard",
+    "standard:fix": "standard --fix",
     "stylelint": "stylelint styles/*",
     "stylelint:fix": " stylelint styles/* --fix"
   },

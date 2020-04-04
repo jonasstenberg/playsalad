@@ -17,6 +17,8 @@ const logFormat = isProduction ? 'tiny' : 'dev'
 app.use(bodyParser.json())
 app.use(morgan(logFormat))
 
+const rooms = []
+
 wss.on('connection', function connection (ws, req) {
   const userId = uuidv4()
   webSockets[userId] = ws
@@ -65,6 +67,8 @@ setInterval(() => {
     ws.ping(null, false, true)
   })
 }, 5000)
+
+app.use('rooms', require('./routes/rooms'))
 
 server.listen(process.env.PORT || 8080, () => {
   console.log(`Server started on port ${server.address().port}`)

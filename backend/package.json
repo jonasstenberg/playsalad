@@ -12,13 +12,35 @@
     "ws": "^7.2.3"
   },
   "devDependencies": {
+    "husky": "^4.2.3",
+    "lint-staged": "^10.1.1",
     "nodemon": "^2.0.2",
     "standard": "^14.3.3"
   },
   "scripts": {
     "start": "nodemon index.js",
-    "fix": "standard --fix",
-    "test": "standard"
+    "standard": "standard",
+    "standard:fix": "standard --fix",
+    "stylelint": "stylelint styles/*",
+    "stylelint:fix": " stylelint styles/* --fix"
+  },
+  "standard": {
+    "ignore": [
+      "/node_modules/"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "standard"
+    ],
+    "*.css": [
+      "stylelint styles/**/*.css"
+    ]
   },
   "repository": {
     "type": "git",
