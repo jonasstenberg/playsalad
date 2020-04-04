@@ -2,13 +2,14 @@
 
 :root {
   /* Colors - main */
-  --orange: #ed6a5a;
-  --yellow: #f4f1bb;
-  --turquoise: #9bc1bc;
-  --blue: #5ca4a9;
-  --off-white: #e6ebe0;
-  --grey: #c1c1c1;
-  --dark-gray: #333;
+  --color-orange: #ed6a5a;
+  --color-yellow: #f4f1bb;
+  --color-turquoise: #9bc1bc;
+  --color-blue: #5ca4a9;
+  --color-off-white: #e6ebe0;
+  --color-grey: #c1c1c1;
+  --color-dark-gray: #333;
+  --color-white: #fff;
 }
 
 /* Fonts TODO: Add font styles and download font files locally */
@@ -73,9 +74,44 @@ h3 {
   font-weight: 400;
 }
 
+main {
+  text-align: center;
+}
+
+.wrapper {
+  width: 100%;
+  max-width: 37.5rem;
+}
+
 .caption {
   font-size: 0.875rem;
   font-weight: 300;
+}
+
+.button,
+.input {
+  position: relative;
+  width: 15.625rem;
+  padding: 1rem;
+  margin: 1rem;
+  font-family: 'Dosis', Verdana, sans-serif;
+  cursor: pointer;
+  border: 0.125rem solid transparent;
+  border-radius: 50em;
+}
+
+.input--orange {
+  border-color: var(--color-orange);
+}
+
+.button--orange {
+  color: var(--color-white);
+  background: var(--color-orange);
+}
+
+.button--blue {
+  color: var(--color-white);
+  background: var(--color-blue);
 }
 
 .splash {
@@ -86,4 +122,10 @@ h3 {
   padding: 1rem;
   color: #fff;
   background: radial-gradient(50% 50% at 50% 50%, #eb887b 0%, #ed6a5a 100%);
+}
+
+.flex {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
 }
