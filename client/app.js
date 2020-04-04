@@ -36,8 +36,11 @@ location.subscribe(wiredActions.location)
 
 connection.onmessage = (e) => {
   const message = JSON.parse(e.data)
-  console.log('broadcast', message)
-  wiredActions.setRoom(message)
+  if (message.playerId) {
+    wiredActions.setPlayerId(message.playerId)
+  } else {
+    wiredActions.setRoom(message)
+  }
 }
 
 connection.onerror = (error) => {

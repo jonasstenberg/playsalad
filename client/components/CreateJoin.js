@@ -3,23 +3,7 @@ import fetch from '../utils/pseudo-fetch'
 
 import { backendBaseUrl } from '../config'
 
-export default (state, actions) => h('div', {
-  class: 'flex',
-  oncreate: async () => {
-    const res = await fetch(`${backendBaseUrl}/player`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    const json = await res.json()
-    actions.setPlayerId(json.playerId)
-
-    state.wsConnection.send(JSON.stringify({
-      playerId: json.playerId
-    }))
-  }
-}, [
+export default (state, actions) => h('div', { class: 'flex' }, [
   h('input', {
     class: 'input input--orange',
     oninput: evt => {
@@ -47,8 +31,7 @@ export default (state, actions) => h('div', {
         console.log('no room with that id')
         return
       }
-      const json = await res.json()
-      actions.setRoom(json)
+      actions.setRoomInput()
       actions.location.go('/lobby/choose-name')
     }
   }, 'Enter'),

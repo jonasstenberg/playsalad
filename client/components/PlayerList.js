@@ -5,9 +5,9 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
     h('div', { class: 'player-list__team' }, [
       h('div', { class: 'player-list__team-name player-list__team-name--red caption' }, 'Team red'),
       h('ul', { class: 'player-list__players' }, [
-        state.room && state.room.players && state.room.players.length
-          ? state.room.players.map((player) => {
-            return h('li', { class: 'player-list__player' }, player.playerName)
+        state.room && state.room.players && Object.values(state.room.players).length
+          ? Object.values(state.room.players).map((player) => {
+            return h('li', { class: 'player-list__player' }, player)
           })
           : null
       ])

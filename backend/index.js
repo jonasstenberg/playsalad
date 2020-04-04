@@ -4,7 +4,6 @@ const express = require('express')
 const http = require('http')
 const HttpStatus = require('http-status-codes')
 const morgan = require('morgan')
-const { v4: uuidv4 } = require('uuid')
 const WebSocket = require('ws')
 
 const app = express()
@@ -24,22 +23,39 @@ const state = require('./state')
 wss.on('connection', function connection (ws, req) {
   ws.isAlive = true
 
+  const playerId = req.headers['sec-websocket-key']
+
+  state.players[playerId] = ws
+
+  console.log(playerId)
+
+  ws.send(JSON.stringify({
+    playerId
+  }))
+
   ws.on('pong', () => {
     ws.isAlive = true
   })
 
   ws.on('message', function incoming (message) {
     const data = JSON.parse(message)
-    if (data.playerId && !state.webSockets[data.playerId]) {
-      console.log(`connecting ws for player: ${data.playerId}`)
-      state.players.find(p => p.playerId === data.playerId).wsConnection = ws
-    }
+    console.log('recieved data', data)
   })
 
-  // ws.on('close', function () {
-  //   delete webSockets[playerId]
-  //   console.log(`Deleted user: ${playerId}`)
-  // })
+  ws.on('close', function () {
+    delete state.players[playerId]
+    state.rooms.map(room => {
+      if (room.players[playerId]) {
+        delete room.players[playerId]
+
+        Object.keys(room.players).forEach(p => {
+          state.players[p].send(JSON.stringify(room))
+        })
+      }
+      return room
+    })
+    console.log(`Deleted user: ${playerId}`)
+  })
 })
 
 setInterval(() => {
@@ -54,63 +70,25 @@ setInterval(() => {
   })
 }, 5000)
 
-app.post('/player', (req, res) => {
-  try {
-    const playerId = uuidv4()
-    state.players.push({
-      playerId
-    })
-    res.status(HttpStatus.OK).json({
-      playerId
-    })
-  } catch (err) {
-    res.status(HttpStatus.NOT_FOUND).send(err)
-  }
-})
-
-app.put('/player', (req, res) => {
-  const { playerId, playerName, roomId } = req.body
-  console.log(roomId)
-
-  try {
-    const player = state.players.find(p => p.playerId === playerId)
-    player.name = playerName
-
-    const room = state.rooms.find(r => r.roomId === roomId)
-    if (!room.players) {
-      room.players = [player]
-    } else {
-      room.players.find(p => p.playerId === playerId).playerName = playerName
-    }
-
-    room.players.forEach(player => {
-      player.wsConnection.send(JSON.stringify(room))
-    })
-
-    res.sendStatus(HttpStatus.NO_CONTENT)
-  } catch (err) {
-    console.log(err)
-    res.status(HttpStatus.NOT_FOUND).send(err)
-  }
-})
-
 app.post('/rooms', (req, res) => {
   const { playerId } = req.body
 
   try {
     const r = Math.random().toString(36)
     const roomId = r.substring(r.length - 4).replace(/0/g, 'o').toUpperCase()
-    const player = state.players.find(p => p.playerId === playerId)
 
     const room = {
       roomId,
       ownerId: playerId,
-      players: [player]
+      players: {
+        [playerId]: ''
+      }
     }
 
     state.rooms.push(room)
     res.status(HttpStatus.OK).json(room)
   } catch (err) {
+    console.log(err)
     res.status(HttpStatus.NOT_FOUND).send(err)
   }
 })
@@ -128,10 +106,35 @@ app.post('/rooms/join', (req, res) => {
       return
     }
 
-    const player = state.players.find(p => p.playerId === playerId)
-    room.players.push(player)
+    room.players[playerId] = ''
 
     res.status(HttpStatus.OK).json(room)
+  } catch (err) {
+    console.log(err)
+    res.status(HttpStatus.NOT_FOUND).send(err)
+  }
+})
+
+app.put('/player', (req, res) => {
+  const { playerId, playerName, roomId } = req.body
+  console.log(roomId)
+
+  try {
+    const room = state.rooms.find(r => r.roomId === roomId)
+
+    if (!room) {
+      console.log('no room found with that id')
+      res.sendStatus(HttpStatus.NOT_FOUND)
+      return
+    }
+
+    room.players[playerId] = playerName
+
+    Object.keys(room.players).forEach(playerId => {
+      state.players[playerId].send(JSON.stringify(room))
+    })
+
+    res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
     console.log(err)
     res.status(HttpStatus.NOT_FOUND).send(err)
