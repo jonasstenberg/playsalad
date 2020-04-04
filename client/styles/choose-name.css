@@ -4,10 +4,5 @@
 
 .choose-name__input {
   font-size: 2rem;
-  text-align: center;
   background: transparent;
-}
-
-.choose-name__input::placeholder {
-  color: var(--color-grey);
 }

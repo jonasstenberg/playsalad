@@ -3,9 +3,10 @@ import fetch from '../utils/pseudo-fetch'
 
 import { backendBaseUrl } from '../config'
 
-export default (state, actions) => h('div', { class: 'flex' }, [
+export default (state, actions) => h('div', { class: 'create-join flex' }, [
   h('input', {
-    class: 'input input--orange',
+    class: 'create-join__input input input--orange',
+    placeholder: 'Game PIN',
     oninput: evt => {
       if (evt.target.value.length <= 4) {
         actions.setRoom({

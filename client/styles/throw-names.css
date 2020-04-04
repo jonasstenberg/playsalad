@@ -1,0 +1,26 @@
+.throw-names__heading {
+  width: 100%;
+  padding: 0 1rem;
+  margin-bottom: 0;
+  text-align: left;
+}
+
+.throw-names__text {
+  padding: 0 1rem;
+  text-align: left;
+}
+
+.throw-names__name {
+  font-size: 2rem;
+}
+
+.throw-names__list {
+  margin: 0;
+}
+
+.throw-names__input {
+  margin: 0;
+  font-size: 2rem;
+  text-align: left;
+  background: transparent;
+}
