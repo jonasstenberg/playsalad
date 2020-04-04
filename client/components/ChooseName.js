@@ -1,7 +1,10 @@
 import { h } from 'hyperapp'
 import fetch from '../utils/pseudo-fetch'
+import playerNameList from '../data/player-name-list'
 
 import { backendBaseUrl } from '../config'
+
+const randomName = playerNameList[Math.floor(Math.random() * playerNameList.length)]
 
 export default (state, actions) => h('div', { class: 'choose-name flex' }, [
   h('h3', {
@@ -9,9 +12,14 @@ export default (state, actions) => h('div', { class: 'choose-name flex' }, [
   }, 'What may we call you?'),
   h('input', {
     class: 'choose-name__input input',
-    placeholder: 'Cucumber',
+    placeholder: randomName,
+    oncreate: () => actions.setPlayerName(randomName),
     oninput: evt => {
-      actions.setPlayerName(evt.target.value)
+      if (evt.target.value) {
+        actions.setPlayerName(evt.target.value)
+      } else {
+        actions.setPlayerName(randomName)
+      }
     }
   }),
   h('button', {
