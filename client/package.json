@@ -26,10 +26,10 @@
   },
   "lint-staged": {
     "*.js": [
-      "standard frontend/"
+      "standard"
     ],
     "*.css": [
-      "stylelint frontend/styles/**/*.css"
+      "stylelint styles/**/*.css"
     ]
   },
   "repository": {
