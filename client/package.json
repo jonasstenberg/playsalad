@@ -4,7 +4,33 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
-    "hyperapp": "^1.2.10"
+    "hyperapp": "^1.2.10",
+    "normalize.css": "^8.0.1"
+  },
+  "scripts": {
+    "start": "parcel index.html",
+    "standard:fix": "standard --fix",
+    "standard": "standard",
+    "stylelint": "stylelint styles/*",
+    "stylelint:fix": " stylelint styles/* --fix"
+  },
+  "standard": {
+    "ignore": [
+      "/dist/"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "standard frontend/"
+    ],
+    "*.css": [
+      "stylelint frontend/styles/**/*.css"
+    ]
   },
   "repository": {
     "type": "git",
@@ -15,5 +41,14 @@
   "bugs": {
     "url": "https://github.com/jonasstenberg/sallad-bowl/issues"
   },
-  "homepage": "https://github.com/jonasstenberg/sallad-bowl#readme"
+  "homepage": "https://github.com/jonasstenberg/sallad-bowl#readme",
+  "devDependencies": {
+    "husky": "^4.2.3",
+    "lint-staged": "^10.1.1",
+    "parcel": "^1.12.4",
+    "parcel-plugin-stylelint-all": "^0.1.0",
+    "standard": "^14.3.3",
+    "stylelint-config-recess-order": "^2.0.4",
+    "stylelint-config-standard": "^20.0.0"
+  }
 }

@@ -1,14 +1,14 @@
-@import normalize.css;
+@import "normalize.css";
 
 :root {
   /* Colors - main */
-  --orange: #ED6A5A;
-  --yellow: #F4F1BB;
-  --turquoise: #9BC1BC;
-  --blue: #5CA4A9;
-  --off-white: #E6EBE0;
+  --orange: #ed6a5a;
+  --yellow: #f4f1bb;
+  --turquoise: #9bc1bc;
+  --blue: #5ca4a9;
+  --off-white: #e6ebe0;
   --grey: #c1c1c1;
-  --dark-gray: #333333;
+  --dark-gray: #333;
 }
 
 /* Fonts TODO: Add font styles and download font files locally */
@@ -17,7 +17,7 @@
   font-style: normal;
   font-weight: 700;
   src: url(https://fonts.gstatic.com/s/dosis/v17/HhyaU5sn9vOmLzloC_WoEoZK.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  unicode-range: u+0000-00ff, u+0131, u+0152-0153, u+02bb-02bc, u+02c6, u+02da, u+02dc, u+2000-206f, u+2074, u+20ac, u+2122, u+2191, u+2193, u+2212, u+2215, u+feff, u+fffd;
 }
 
 @font-face {
@@ -25,7 +25,7 @@
   font-style: normal;
   font-weight: 400;
   src: local('Open Sans Regular'), local('OpenSans-Regular'), url(https://fonts.gstatic.com/s/opensans/v17/mem8YaGs126MiZpBA-UFVZ0bf8pkAg.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  unicode-range: u+0000-00ff, u+0131, u+0152-0153, u+02bb-02bc, u+02c6, u+02da, u+02dc, u+2000-206f, u+2074, u+20ac, u+2122, u+2191, u+2193, u+2212, u+2215, u+feff, u+fffd;
 }
 
 @font-face {
@@ -33,12 +33,12 @@
   font-style: normal;
   font-weight: 700;
   src: local('Open Sans Bold'), local('OpenSans-Bold'), url(https://fonts.gstatic.com/s/opensans/v17/mem5YaGs126MiZpBA-UN7rgOUuhpKKSTjw.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  unicode-range: u+0000-00ff, u+0131, u+0152-0153, u+02bb-02bc, u+02c6, u+02da, u+02dc, u+2000-206f, u+2074, u+20ac, u+2122, u+2191, u+2193, u+2212, u+2215, u+feff, u+fffd;
 }
 
 *,
-:after,
-:before {
+::after,
+::before {
   box-sizing: border-box;
 }
 
@@ -47,8 +47,8 @@ html {
 }
 
 body {
-  font-size: 1.125rem;
   font-family: 'Open Sans', Verdana, sans-serif;
+  font-size: 1.125rem;
   background: #fafafa;
 }
 
@@ -82,8 +82,8 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 100vh;
   padding: 1rem;
   color: #fff;
-  background: radial-gradient(50% 50% at 50% 50%, #EB887B 0%, #ED6A5A 100%);
-  height: 100vh;
+  background: radial-gradient(50% 50% at 50% 50%, #eb887b 0%, #ed6a5a 100%);
 }
