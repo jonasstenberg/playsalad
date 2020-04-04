@@ -5,7 +5,11 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
     h('div', { class: 'player-list__team' }, [
       h('div', { class: 'player-list__team-name player-list__team-name--red' }, 'Team red'),
       h('ul', { class: 'player-list__players' }, [
-        h('li', { class: 'player-list__player' }, 'Corona')
+        state.room && state.room.players && state.room.players.length
+          ? state.room.players.map((player) => {
+            return h('li', { class: 'player-list__player' }, player.playerName)
+          })
+          : null
       ])
     ]),
     h('div', { class: 'player-list__team' }, [

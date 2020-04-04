@@ -3,11 +3,11 @@ import { location } from '@hyperapp/router'
 export default {
   location: location.actions,
 
-  setGroupName: groupName => ({ groupName }),
+  setRoomInput: roomInput => ({ roomInput }),
 
-  setRoomId: roomId => ({ roomId }),
+  setPlayerName: playerName => ({ playerName }),
 
-  setPlayerId: playerId => ({ playerId }),
+  setRoom: room => ({ room }),
 
-  setPlayers: players => ({ players })
+  setPlayerId: playerId => ({ playerId })
 }

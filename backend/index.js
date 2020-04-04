@@ -69,13 +69,27 @@ app.post('/player', (req, res) => {
 })
 
 app.put('/player', (req, res) => {
-  const { playerId, name } = req.body
+  const { playerId, playerName, roomId } = req.body
+  console.log(roomId)
 
   try {
     const player = state.players.find(p => p.playerId === playerId)
-    player.name = name
+    player.name = playerName
+
+    const room = state.rooms.find(r => r.roomId === roomId)
+    if (!room.players) {
+      room.players = [player]
+    } else {
+      room.players.find(p => p.playerId === playerId).playerName = playerName
+    }
+
+    room.players.forEach(player => {
+      player.wsConnection.send(JSON.stringify(room))
+    })
+
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
+    console.log(err)
     res.status(HttpStatus.NOT_FOUND).send(err)
   }
 })
@@ -87,14 +101,15 @@ app.post('/rooms', (req, res) => {
     const r = Math.random().toString(36)
     const roomId = r.substring(r.length - 4).replace(/0/g, 'o').toUpperCase()
     const player = state.players.find(p => p.playerId === playerId)
-    state.rooms.push({
+
+    const room = {
       roomId,
       ownerId: playerId,
       players: [player]
-    })
-    res.status(HttpStatus.OK).json({
-      roomId
-    })
+    }
+
+    state.rooms.push(room)
+    res.status(HttpStatus.OK).json(room)
   } catch (err) {
     res.status(HttpStatus.NOT_FOUND).send(err)
   }
@@ -102,6 +117,8 @@ app.post('/rooms', (req, res) => {
 
 app.post('/rooms/join', (req, res) => {
   const { playerId, roomId } = req.body
+
+  console.log(playerId, roomId)
 
   try {
     const room = state.rooms.find(r => r.roomId === roomId)
@@ -112,16 +129,9 @@ app.post('/rooms/join', (req, res) => {
     }
 
     const player = state.players.find(p => p.playerId === playerId)
-
     room.players.push(player)
 
-    room.players.forEach(player => {
-      player.wsConnection.send(JSON.stringify({
-        players: room.players.map(({ wsConnection, ...rest }) => rest)
-      }))
-    })
-
-    res.sendStatus(HttpStatus.NO_CONTENT)
+    res.status(HttpStatus.OK).json(room)
   } catch (err) {
     console.log(err)
     res.status(HttpStatus.NOT_FOUND).send(err)

@@ -23,10 +23,35 @@ export default (state, actions) => h('div', {
   h('input', {
     class: 'input input--orange',
     oninput: evt => {
-      actions.setGroupName(evt.target.value)
+      if (evt.target.value.length <= 4) {
+        actions.setRoom({
+          roomId: evt.target.value
+        })
+      }
     }
   }),
-  h('button', { class: 'button button--orange' }, 'Enter'),
+  h('button', {
+    class: 'button button--orange',
+    onclick: async () => {
+      const res = await fetch(`${backendBaseUrl}/rooms/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          roomId: state.room.roomId,
+          playerId: state.playerId
+        })
+      })
+      if (res.status === 404) {
+        console.log('no room with that id')
+        return
+      }
+      const json = await res.json()
+      actions.setRoom(json)
+      actions.location.go('/lobby/choose-name')
+    }
+  }, 'Enter'),
   h('button', {
     class: 'button button--blue',
     onclick: async () => {
@@ -40,8 +65,7 @@ export default (state, actions) => h('div', {
         })
       })
       const json = await res.json()
-      console.log(json)
-      actions.setRoomId(json.roomId)
+      actions.setRoom(json)
       actions.location.go('/lobby/choose-name')
     }
   }, 'Create new')

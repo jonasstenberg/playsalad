@@ -8,7 +8,7 @@ export default (state, actions) => {
   return h('div', { class: 'lobby flex' }, [
     h('div', { class: 'lobby__header' }, [
       h('div', { class: 'lobby__heading caption' }, 'Game Room'),
-      h('h1', { class: 'lobby__heading' }, state.roomId)
+      h('h1', { class: 'lobby__heading' }, state.room.roomId)
     ]),
     h(Route, {
       path: '/lobby/choose-name',
