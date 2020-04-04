@@ -1,0 +1,10 @@
+.lobby__header {
+  width: 100%;
+  padding: 1rem;
+  color: var(--color-white);
+  background: var(--color-blue);
+}
+
+.lobby__heading {
+  margin: 0;
+}

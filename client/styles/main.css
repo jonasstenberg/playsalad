@@ -1,5 +1,4 @@
 @import "./normalize.css";
-@import "./choose-name.css";
 
 :root {
   /* Colors - main */
@@ -12,6 +11,9 @@
   --color-dark-gray: #333;
   --color-white: #fff;
 }
+
+@import "./choose-name.css";
+@import "./lobby.css";
 
 /* Fonts TODO: Add font styles and download font files locally */
 @font-face {

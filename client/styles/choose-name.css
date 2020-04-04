@@ -1,3 +1,9 @@
 .choose-name__input {
-  background: var(--color-white);
+  font-size: 2rem;
+  text-align: center;
+  background: transparent;
+}
+
+.choose-name__input::placeholder {
+  color: var(--color-grey);
 }
