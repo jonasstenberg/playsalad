@@ -1,0 +1,20 @@
+.player-list {
+  width: 100%;
+}
+
+.player-list__teams {
+  display: flex;
+  width: 100%;
+  padding: 1.5rem;
+}
+
+.player-list__team {
+  flex-basis: 50%;
+}
+
+.player-list__players {
+  padding: 0;
+  font-family: 'Dosis', Verdana, sans-serif;
+  font-size: 2rem;
+  list-style: none;
+}

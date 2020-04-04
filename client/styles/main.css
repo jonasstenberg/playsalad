@@ -14,6 +14,7 @@
 
 @import "./choose-name.css";
 @import "./lobby.css";
+@import "./player-list.css";
 
 /* Fonts TODO: Add font styles and download font files locally */
 @font-face {
