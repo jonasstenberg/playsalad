@@ -43,10 +43,12 @@
   },
   "homepage": "https://github.com/jonasstenberg/sallad-bowl#readme",
   "devDependencies": {
+    "autoprefixer": "^9.7.5",
     "husky": "^4.2.3",
     "lint-staged": "^10.1.1",
-    "parcel": "^1.12.4",
+    "parcel-bundler": "^1.12.4",
     "parcel-plugin-stylelint-all": "^0.1.0",
+    "postcss-modules": "^1.5.0",
     "standard": "^14.3.3",
     "stylelint-config-recess-order": "^2.0.4",
     "stylelint-config-standard": "^20.0.0"

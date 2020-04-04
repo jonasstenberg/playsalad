@@ -1,3 +1,5 @@
+/* global WebSocket */
+
 const url = 'ws://localhost:8080'
 const connection = new WebSocket(url)
 
