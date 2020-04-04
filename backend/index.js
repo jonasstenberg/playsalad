@@ -20,6 +20,7 @@ app.use(morgan(logFormat))
 wss.on('connection', function connection (ws, req) {
   const userId = uuidv4()
   webSockets[userId] = ws
+
   ws.isAlive = true
 
   ws.on('pong', () => {
@@ -29,24 +30,28 @@ wss.on('connection', function connection (ws, req) {
   ws.on('message', function incoming (message) {
     const data = JSON.parse(message)
     switch (data.action) {
+      case 'createUser':
+        ws.send(JSON.stringify({
+          type: 'newUser',
+          userId
+        }))
+        break
       case 'createGroup':
         var r = Math.random().toString(36)
         var groupId = r.substring(r.length - 4).replace(/0/g, 'o').toUpperCase()
-        webSockets[userId].send(JSON.stringify({
+        ws.send(JSON.stringify({
+          type: 'newGroup',
           groupId
         }))
-        console.log('creating group')
+        console.log(`Creating group: ${groupId} for user ${userId}`)
         break
     }
-
-    // send back the message to the other clients
-    wss.clients.forEach(client => {
-      client.send(`Hello, broadcast message -> ${message}`)
-    })
-    console.log('received: %s', data.name)
   })
 
-  ws.send('Hello! You\'re now connected!')
+  ws.on('close', function () {
+    delete webSockets[userId]
+    console.log(`Deleted user: ${userId}`)
+  })
 })
 
 setInterval(() => {
