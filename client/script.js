@@ -28,11 +28,9 @@ connection.onmessage = (e) => {
   switch (message.type) {
     case 'newUser':
       player.userId = message.userId
-      console.log(player)
       break
     case 'newGroup':
       player.groupId = message.groupId
-      console.log(player)
 
       connection.send(JSON.stringify({
         action: 'joinGroup',

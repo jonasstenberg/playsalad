@@ -1,12 +1,21 @@
+/* global WebSocket */
+
 import { h, app } from 'hyperapp'
 import { Route, location } from '@hyperapp/router'
+
 import state from './state'
 import actions from './actions'
-
 import CreateJoin from './components/CreateJoin'
 import Lobby from './components/Lobby'
+import { websocketUrl } from './config'
 
-const main = app(
+require('@babel/polyfill')
+
+const connection = new WebSocket(websocketUrl)
+
+state.wsConnection = connection
+
+const wiredActions = app(
   state,
   actions,
   (state, actions) => h('div', {}, [
@@ -23,4 +32,13 @@ const main = app(
   document.getElementById('app')
 )
 
-location.subscribe(main.location)
+location.subscribe(wiredActions.location)
+
+connection.onmessage = (e) => {
+  const message = JSON.parse(e.data)
+  wiredActions.setPlayers(message.players)
+}
+
+connection.onerror = (error) => {
+  console.log(`WebSocket error: ${error}`)
+}

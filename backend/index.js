@@ -1,6 +1,8 @@
 const bodyParser = require('body-parser')
+const cors = require('cors')
 const express = require('express')
 const http = require('http')
+const HttpStatus = require('http-status-codes')
 const morgan = require('morgan')
 const { v4: uuidv4 } = require('uuid')
 const WebSocket = require('ws')
@@ -9,20 +11,17 @@ const app = express()
 
 const server = http.createServer(app)
 const wss = new WebSocket.Server({ server })
-const webSockets = {}
 
 const isProduction = process.env.NODE_ENV === 'production'
 const logFormat = isProduction ? 'tiny' : 'dev'
 
+app.use(cors())
 app.use(bodyParser.json())
 app.use(morgan(logFormat))
 
-const rooms = []
+const state = require('./state')
 
 wss.on('connection', function connection (ws, req) {
-  const userId = uuidv4()
-  webSockets[userId] = ws
-
   ws.isAlive = true
 
   ws.on('pong', () => {
@@ -31,29 +30,16 @@ wss.on('connection', function connection (ws, req) {
 
   ws.on('message', function incoming (message) {
     const data = JSON.parse(message)
-    switch (data.action) {
-      case 'createUser':
-        ws.send(JSON.stringify({
-          type: 'newUser',
-          userId
-        }))
-        break
-      case 'createGroup':
-        var r = Math.random().toString(36)
-        var groupId = r.substring(r.length - 4).replace(/0/g, 'o').toUpperCase()
-        ws.send(JSON.stringify({
-          type: 'newGroup',
-          groupId
-        }))
-        console.log(`Creating group: ${groupId} for user ${userId}`)
-        break
+    if (data.playerId && !state.webSockets[data.playerId]) {
+      console.log(`connecting ws for player: ${data.playerId}`)
+      state.players.find(p => p.playerId === data.playerId).wsConnection = ws
     }
   })
 
-  ws.on('close', function () {
-    delete webSockets[userId]
-    console.log(`Deleted user: ${userId}`)
-  })
+  // ws.on('close', function () {
+  //   delete webSockets[playerId]
+  //   console.log(`Deleted user: ${playerId}`)
+  // })
 })
 
 setInterval(() => {
@@ -68,7 +54,79 @@ setInterval(() => {
   })
 }, 5000)
 
-app.use('rooms', require('./routes/rooms'))
+app.post('/player', (req, res) => {
+  try {
+    const playerId = uuidv4()
+    state.players.push({
+      playerId
+    })
+    res.status(HttpStatus.OK).json({
+      playerId
+    })
+  } catch (err) {
+    res.status(HttpStatus.NOT_FOUND).send(err)
+  }
+})
+
+app.put('/player', (req, res) => {
+  const { playerId, name } = req.body
+
+  try {
+    const player = state.players.find(p => p.playerId === playerId)
+    player.name = name
+    res.sendStatus(HttpStatus.NO_CONTENT)
+  } catch (err) {
+    res.status(HttpStatus.NOT_FOUND).send(err)
+  }
+})
+
+app.post('/rooms', (req, res) => {
+  const { playerId } = req.body
+
+  try {
+    const r = Math.random().toString(36)
+    const roomId = r.substring(r.length - 4).replace(/0/g, 'o').toUpperCase()
+    const player = state.players.find(p => p.playerId === playerId)
+    state.rooms.push({
+      roomId,
+      ownerId: playerId,
+      players: [player]
+    })
+    res.status(HttpStatus.OK).json({
+      roomId
+    })
+  } catch (err) {
+    res.status(HttpStatus.NOT_FOUND).send(err)
+  }
+})
+
+app.post('/rooms/join', (req, res) => {
+  const { playerId, roomId } = req.body
+
+  try {
+    const room = state.rooms.find(r => r.roomId === roomId)
+    if (!room) {
+      console.log('no room found with that id')
+      res.sendStatus(HttpStatus.NOT_FOUND)
+      return
+    }
+
+    const player = state.players.find(p => p.playerId === playerId)
+
+    room.players.push(player)
+
+    room.players.forEach(player => {
+      player.wsConnection.send(JSON.stringify({
+        players: room.players.map(({ wsConnection, ...rest }) => rest)
+      }))
+    })
+
+    res.sendStatus(HttpStatus.NO_CONTENT)
+  } catch (err) {
+    console.log(err)
+    res.status(HttpStatus.NOT_FOUND).send(err)
+  }
+})
 
 server.listen(process.env.PORT || 8080, () => {
   console.log(`Server started on port ${server.address().port}`)
