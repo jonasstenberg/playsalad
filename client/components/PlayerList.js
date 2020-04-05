@@ -7,7 +7,7 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
       h('ul', { class: 'player-list__players' }, [
         state.room && state.room.players && Object.keys(state.room.players).length
           ? state.room.team1.map((playerId) => {
-            return h('li', { class: `player-list__player${playerId === state.room.ownerId ? ' player-list__player-owner' : ''}` }, state.room.players[playerId])
+            return h('li', { class: `player-list__player${playerId === state.room.ownerId ? ' player-list__player-owner' : ''}` }, state.room.players[playerId].name)
           })
           : null
       ])
@@ -17,7 +17,7 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
       h('ul', { class: 'player-list__players' }, [
         state.room && state.room.players && Object.keys(state.room.players).length
           ? state.room.team2.map((playerId) => {
-            return h('li', { class: `player-list__player${playerId === state.room.ownerId ? ' player-list__player-owner' : ''}` }, state.room.players[playerId])
+            return h('li', { class: `player-list__player${playerId === state.room.ownerId ? ' player-list__player-owner' : ''}` }, state.room.players[playerId].name)
           })
           : null
       ])
