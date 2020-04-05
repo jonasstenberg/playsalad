@@ -9,5 +9,7 @@ export default {
 
   setRoom: room => ({ room }),
 
-  setPlayerId: playerId => ({ playerId })
+  setPlayerId: playerId => ({ playerId }),
+
+  setErrorText: errorText => ({ errorText })
 }

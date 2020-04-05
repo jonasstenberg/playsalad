@@ -3,7 +3,15 @@ import fetch from '../utils/pseudo-fetch'
 
 import { backendBaseUrl } from '../config'
 
-export default (state, actions) => h('div', { class: 'create-join flex' }, [
+export default (state, actions) => h('div', {
+  class: 'create-join flex',
+  oncreate: () => {
+    actions.setRoom({
+      roomId: ''
+    })
+    actions.setErrorText('')
+  }
+}, [
   h('img', { src: '/images/logo-orange.svg' }),
   h('input', {
     class: 'create-join__input input input--orange',
@@ -16,6 +24,7 @@ export default (state, actions) => h('div', { class: 'create-join flex' }, [
       }
     }
   }),
+  state.errorText ? h('span', {}, state.errorText) : '',
   h('button', {
     class: 'button button--orange',
     onclick: async () => {
@@ -30,12 +39,11 @@ export default (state, actions) => h('div', { class: 'create-join flex' }, [
         })
       })
 
-      console.log(res)
       if (res.status === 404) {
         console.log('no room with that id')
+        actions.setErrorText('No Game with that PIN')
         return
       }
-      actions.setRoomInput()
       actions.location.go('/lobby/choose-name')
     }
   }, 'Enter'),
