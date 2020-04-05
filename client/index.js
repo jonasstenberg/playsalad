@@ -1,13 +1,13 @@
 /* global WebSocket */
 
-import { h, app } from 'hyperapp'
-import { Route, location } from '@hyperapp/router'
+import { app } from 'hyperapp'
+import { location } from '@hyperapp/router'
 
 import state from './state'
 import actions from './actions'
-import CreateJoin from './components/CreateJoin'
-import Lobby from './components/Lobby'
 import { websocketUrl } from './config'
+
+import App from './components/App'
 
 require('@babel/polyfill')
 
@@ -18,17 +18,7 @@ state.wsConnection = connection
 const wiredActions = app(
   state,
   actions,
-  (state, actions) => h('div', {}, [
-    h(Route, {
-      path: '/',
-      render: () => CreateJoin(state, actions)
-    }),
-    h(Route, {
-      path: '/lobby/',
-      parent: true,
-      render: () => Lobby(state, actions)
-    })
-  ]),
+  App,
   document.getElementById('app')
 )
 
