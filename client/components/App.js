@@ -3,6 +3,7 @@ import { Route } from '@hyperapp/router'
 
 import CreateJoin from './CreateJoin'
 import Lobby from './Lobby'
+import Game from './Game'
 import Rules from './Rules'
 
 export default (state, actions) => h('div', {}, [
@@ -14,6 +15,10 @@ export default (state, actions) => h('div', {}, [
     path: '/lobby/',
     parent: true,
     render: () => Lobby(state, actions)
+  }),
+  h(Route, {
+    path: '/game/',
+    render: () => Game(state, actions)
   }),
   h(Route, {
     path: '/rules/',

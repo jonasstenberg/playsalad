@@ -48,7 +48,8 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
     ? h('button', {
       class: `button button--orange ${startGameEnabled(state) ? '' : 'button--disabled'}`,
       disabled: !startGameEnabled(state),
-      oncreate: () => state.room && state.room.players ? console.log(Object.keys(state.room.players).length) : ''
+      oncreate: () => state.room && state.room.players ? console.log(Object.keys(state.room.players).length) : '',
+      onclick: () => actions.location.go('/game')
     }, 'Start game')
     : null
 ])
