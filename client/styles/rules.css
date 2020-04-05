@@ -1,0 +1,51 @@
+.rules {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: #e6ebe0;
+}
+
+.rules__heading {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 3rem;
+  margin-left: 1.875rem;
+  font-size: 2rem;
+}
+
+.rules__heading-text {
+  margin-left: 1.375rem;
+  font-weight: 600;
+}
+
+.rules__paragraphs {
+  display: flex;
+  flex-direction: column;
+  margin: 1.5rem 1.5rem 0;
+  font-size: 1rem;
+  line-height: 1.375;
+  text-align: left;
+}
+
+.rules__paragraph-topic {
+  margin: 0;
+}
+
+.rules__paragraph-text {
+  margin-bottom: 1.5rem;
+}
+
+.rules__return {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 3.75rem;
+  background-color: #fff;
+}
+
+.rules__return-arrow {
+  margin-top: 0.25rem;
+  margin-right: 0.5rem;
+}

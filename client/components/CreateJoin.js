@@ -63,5 +63,18 @@ export default (state, actions) => h('div', {
       actions.setRoom(json)
       actions.location.go('/lobby/choose-name')
     }
-  }, 'Create new')
+  }, 'Create new'),
+  h('div', {
+    class: 'create-join__rules',
+    onclick: () => {
+      actions.location.go('/rules')
+    }
+  }, [
+    h('img', { src: '/images/rule-book.svg' }),
+    h('span', { class: 'create-join__rules-text' }, 'game rules'),
+    h('img', {
+      src: '/images/arrow-right.svg',
+      class: 'create-join__rules-arrow'
+    })
+  ])
 ])
