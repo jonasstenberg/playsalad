@@ -47,14 +47,14 @@ wss.on('connection', function connection (ws, req) {
     state.rooms = state.rooms.map(room => {
       if (room.players[playerId]) {
         delete room.players[playerId]
-
-        Object.keys(room.players).forEach(p => {
-          state.players[p].send(JSON.stringify(room))
-        })
       }
 
       room.team1 = room.team1.filter(t => t !== playerId)
       room.team2 = room.team2.filter(t => t !== playerId)
+
+      Object.keys(room.players).forEach(p => {
+        state.players[p].send(JSON.stringify(room))
+      })
 
       return room
     }).filter(room => Object.keys(room.players).length)
