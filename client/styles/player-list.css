@@ -18,3 +18,11 @@
   font-weight: 600;
   list-style: none;
 }
+
+.player-list__player {
+  font-weight: normal;
+}
+
+.player-list__player-owner {
+  font-weight: bold;
+}

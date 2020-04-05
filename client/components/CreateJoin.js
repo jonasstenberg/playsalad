@@ -29,6 +29,8 @@ export default (state, actions) => h('div', { class: 'create-join flex' }, [
           playerId: state.playerId
         })
       })
+
+      console.log(res)
       if (res.status === 404) {
         console.log('no room with that id')
         return
