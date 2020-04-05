@@ -30,8 +30,12 @@ export default (state, actions) => {
       path: '/lobby/throw-names',
       render: () => ThrowNames(state, actions)
     }),
-    // TODO: Fix back link
-    h('span', { class: 'return' }, [
+    h('span', {
+      class: 'return',
+      onclick: () => {
+        window.history.go(-1)
+      }
+    }, [
       h('img', { src: '/images/return.svg' }),
       'Return'
     ])
