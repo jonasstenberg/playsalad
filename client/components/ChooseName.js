@@ -33,7 +33,7 @@ export default (state, actions) => h('div', { class: 'choose-name flex' },
           },
           body: JSON.stringify({
             playerId: state.playerId,
-            playerName: state.playerName,
+            name: state.playerName,
             roomId: state.room.roomId
           })
         })

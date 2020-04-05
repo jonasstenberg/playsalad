@@ -85,7 +85,9 @@ app.post('/rooms', (req, res) => {
       roomId,
       ownerId: playerId,
       players: {
-        [playerId]: ''
+        [playerId]: {
+          name: ''
+        }
       },
       team1: [playerId],
       team2: []
@@ -110,7 +112,9 @@ app.post('/rooms/join', (req, res) => {
       return
     }
 
-    room.players[playerId] = ''
+    room.players[playerId] = {
+      name: ''
+    }
     if (room.team1.length > room.team2.length) {
       room.team2.push(playerId)
     } else {
@@ -125,8 +129,7 @@ app.post('/rooms/join', (req, res) => {
 })
 
 app.put('/player', (req, res) => {
-  const { playerId, playerName, roomId } = req.body
-  console.log(roomId)
+  const { playerId, name, notes, roomId } = req.body
 
   try {
     const room = state.rooms.find(r => r.roomId === roomId)
@@ -137,7 +140,10 @@ app.put('/player', (req, res) => {
       return
     }
 
-    room.players[playerId] = playerName
+    room.players[playerId] = {
+      name,
+      notes
+    }
 
     Object.keys(room.players).forEach(playerId => {
       state.players[playerId].send(JSON.stringify(room))
