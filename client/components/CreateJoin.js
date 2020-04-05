@@ -4,6 +4,7 @@ import fetch from '../utils/pseudo-fetch'
 import { backendBaseUrl } from '../config'
 
 export default (state, actions) => h('div', { class: 'create-join flex' }, [
+  h('img', { src: '/images/logo-orange.svg' }),
   h('input', {
     class: 'create-join__input input input--orange',
     placeholder: 'Game PIN',

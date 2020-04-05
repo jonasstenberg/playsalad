@@ -14,6 +14,7 @@
 
 @import "./fonts.css";
 @import "./defaults.css";
+@import "./create-join.css";
 @import "./choose-name.css";
 @import "./lobby.css";
 @import "./player-list.css";

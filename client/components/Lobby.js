@@ -31,6 +31,9 @@ export default (state, actions) => {
       render: () => ThrowNames(state, actions)
     }),
     // TODO: Fix back link
-    h('span', { class: 'return' }, 'Return')
+    h('span', { class: 'return' }, [
+      h('img', { src: '/images/return.svg' }),
+      'Return'
+    ])
   ])
 }

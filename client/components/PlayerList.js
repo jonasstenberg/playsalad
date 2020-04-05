@@ -23,10 +23,10 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
       ])
     ])
   ]),
-  h('div', { class: 'player-list__waiting' }, 'waiting for other players to join...'),
+  h('div', { class: 'player-list__waiting caption' }, 'waiting for other players to join...'),
   h('button', {
     class: 'button button--blue',
     onclick: () => actions.location.go('/lobby/throw-names')
   }, 'Throw in names'),
-  h('button', { class: 'button button--orange' }, 'Start game')
+  h('button', { class: 'button button--orange button--disabled', disabled: 'true' }, 'Start game')
 ])

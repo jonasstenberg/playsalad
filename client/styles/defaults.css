@@ -84,6 +84,13 @@ main {
   box-shadow: 0 0.35rem 0 0.05rem #52888b;
 }
 
+.button--disabled {
+  color: #a1a1a1;
+  cursor: default;
+  background: var(--color-gray);
+  box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.25);
+}
+
 .splash {
   display: flex;
   align-items: center;
@@ -101,5 +108,10 @@ main {
 }
 
 .return {
+  margin-top: 1rem;
   color: var(--color-blue);
+}
+
+.return img {
+  margin-right: 0.5rem;
 }
