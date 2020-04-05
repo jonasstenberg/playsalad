@@ -37,7 +37,7 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
   h('div', { class: 'player-list__waiting caption' }, 'waiting for other players to join...'),
   h('button', {
     class: `button button--blue ${state.room && state.room.players && state.room.players[state.playerId] && state.room.players[state.playerId].notes ? 'button--disabled' : ''}`,
-    disabled: state.room && state.room.players && state.room.players[state.playerId] && state.room.players[state.playerId].notes ? state.room.players[state.playerId].notes : true,
+    disabled: state.room && state.room.players && state.room.players[state.playerId] && state.room.players[state.playerId].notes ? state.room.players[state.playerId].notes : false,
     onclick: () => actions.location.go('/lobby/throw-names')
   }, 'Throw in names'),
   state.playerId === state.room.ownerId
