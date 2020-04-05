@@ -5,7 +5,9 @@
 .player-list__teams {
   display: flex;
   width: 100%;
+  max-width: 500px;
   padding: 1.5rem;
+  text-align: left;
 }
 
 .player-list__team {
@@ -13,24 +15,36 @@
 }
 
 .player-list__team-logo {
+  width: 0.875rem;
+  height: auto;
   margin-right: 0.5rem;
+}
+
+.player-list__team-name--ice {
+  color: var(--color-blue);
+}
+
+.player-list__team-name--fire {
+  color: var(--color-orange);
 }
 
 .player-list__players {
   padding: 0;
   font-family: 'Dosis', Verdana, sans-serif;
-  font-weight: 600;
   list-style: none;
 }
 
 .player-list__player {
-  font-weight: normal;
+  display: flex;
+  align-items: center;
 }
 
-.player-list__player-checkbox {
+.player-list__player--check {
+  width: 0.875rem;
+  height: auto;
   margin-right: 0.5rem;
 }
 
-.player-list__player-current {
-  font-weight: bold;
+.player-list__player--current {
+  font-weight: 600;
 }

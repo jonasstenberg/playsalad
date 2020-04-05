@@ -30,14 +30,16 @@ export default (state, actions) => {
       path: '/lobby/throw-names',
       render: () => ThrowNames(state, actions)
     }),
-    h('span', {
-      class: 'return',
-      onclick: () => {
-        window.history.go(-1)
-      }
-    }, [
-      h('img', { src: '/images/return.svg' }),
-      'Return'
-    ])
+    state.room && state.room.players && state.room.players[state.playerId] && !state.room.players[state.playerId].notes
+      ? h('span', {
+        class: 'return',
+        onclick: () => {
+          window.history.go(-1)
+        }
+      }, [
+        h('img', { src: '/images/return.svg' }),
+        'Return'
+      ])
+      : null
   ])
 }
