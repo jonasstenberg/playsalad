@@ -28,5 +28,7 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
     class: 'button button--blue',
     onclick: () => actions.location.go('/lobby/throw-names')
   }, 'Throw in names'),
-  h('button', { class: 'button button--orange button--disabled', disabled: 'true' }, 'Start game')
+  state.playerId === state.room.ownerId
+    ? h('button', { class: 'button button--orange button--disabled', disabled: 'true' }, 'Start game')
+    : null
 ])
