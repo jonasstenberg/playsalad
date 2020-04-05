@@ -1,5 +1,7 @@
 import { h } from 'hyperapp'
 
+import Player from './Player'
+
 const startGameEnabled = (state) => {
   if (!state.room || !state.room.players) {
     return false
@@ -14,34 +16,24 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
     class: 'player-list__teams'
   }, [
     h('div', { class: 'player-list__team' }, [
-      h('div', { class: 'player-list__team-name player-list__team-name--red caption' }, 'Team fire'),
+      h('div', { class: 'player-list__team-name player-list__team-name--red caption' }, [
+        h('img', { src: '/images/fire.svg' }),
+        'Team fire'
+      ]),
       h('ul', { class: 'player-list__players' }, [
         state.room && state.room.players && Object.keys(state.room.players).length
-          ? state.room.team1.map((playerId) => {
-            return h('li', { class: `player-list__player${playerId === state.playerId ? ' player-list__player-current' : ''}` }, [
-              state.room.players[playerId].notes ? h('img', {
-                src: '/images/checkbox.svg',
-                class: 'player-list__player-checkbox'
-              }) : '',
-              h('span', {}, state.room.players[playerId].name)
-            ])
-          })
+          ? state.room.team1.map((playerId) => Player(state, playerId))
           : null
       ])
     ]),
     h('div', { class: 'player-list__team' }, [
-      h('div', { class: 'player-list__team-name player-list__team-name--blue caption' }, 'Team ice'),
+      h('div', { class: 'player-list__team-name player-list__team-name--blue caption' }, [
+        h('img', { src: '/images/ice.svg' }),
+        'Team ice'
+      ]),
       h('ul', { class: 'player-list__players' }, [
         state.room && state.room.players && Object.keys(state.room.players).length
-          ? state.room.team2.map((playerId) => {
-            return h('li', { class: `player-list__player${playerId === state.playerId ? ' player-list__player-current' : ''}` }, [
-              state.room.players[playerId].notes ? h('img', {
-                src: '/images/checkbox.svg',
-                class: 'player-list__player-checkbox'
-              }) : '',
-              h('span', {}, state.room.players[playerId].name)
-            ])
-          })
+          ? state.room.team2.map((playerId) => Player(state, playerId))
           : null
       ])
     ])

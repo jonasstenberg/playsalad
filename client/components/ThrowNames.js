@@ -35,7 +35,7 @@ export default (state, actions) => h('div', { class: 'throw-names flex' }, [
   h('button', {
     class: 'button button--orange',
     onclick: async () => {
-      await fetch(`${backendBaseUrl}/api/player`, {
+      await fetch(`${backendBaseUrl}/player`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
