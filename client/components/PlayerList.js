@@ -1,23 +1,31 @@
 import { h } from 'hyperapp'
 
+const startGameEnabled = (state) => {
+  const allHasThrownNotes = Object.keys(state.room.players).every(playerId => state.room.players[playerId].notes && state.room.players[playerId].notes.length)
+
+  return allHasThrownNotes && Object.keys(state.room.players).length > 1
+}
+
 export default (state, actions) => h('div', { class: 'player-list flex' }, [
-  h('div', { class: 'player-list__teams' }, [
+  h('div', {
+    class: 'player-list__teams'
+  }, [
     h('div', { class: 'player-list__team' }, [
-      h('div', { class: 'player-list__team-name player-list__team-name--red caption' }, 'Team red'),
+      h('div', { class: 'player-list__team-name player-list__team-name--red caption' }, 'Team fire'),
       h('ul', { class: 'player-list__players' }, [
         state.room && state.room.players && Object.keys(state.room.players).length
           ? state.room.team1.map((playerId) => {
-            return h('li', { class: `player-list__player${playerId === state.room.ownerId ? ' player-list__player-owner' : ''}` }, state.room.players[playerId].name)
+            return h('li', { class: `player-list__player${playerId === state.room.ownerId ? ' player-list__player-owner' : ''}` }, state.room.players[playerId].notes ? 'yes' : 'no', state.room.players[playerId].name)
           })
           : null
       ])
     ]),
     h('div', { class: 'player-list__team' }, [
-      h('div', { class: 'player-list__team-name player-list__team-name--blue caption' }, 'Team blue'),
+      h('div', { class: 'player-list__team-name player-list__team-name--blue caption' }, 'Team ice'),
       h('ul', { class: 'player-list__players' }, [
         state.room && state.room.players && Object.keys(state.room.players).length
           ? state.room.team2.map((playerId) => {
-            return h('li', { class: `player-list__player${playerId === state.room.ownerId ? ' player-list__player-owner' : ''}` }, state.room.players[playerId].name)
+            return h('li', { class: `player-list__player${playerId === state.room.ownerId ? ' player-list__player-owner' : ''}` }, state.room.players[playerId].notes ? 'yes' : 'no', state.room.players[playerId].name)
           })
           : null
       ])
@@ -25,10 +33,15 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
   ]),
   h('div', { class: 'player-list__waiting caption' }, 'waiting for other players to join...'),
   h('button', {
-    class: 'button button--blue',
+    class: `button button--blue ${state.room.players[state.playerId].notes ? 'button--disabled' : ''}`,
+    disabled: state.room.players[state.playerId].notes,
     onclick: () => actions.location.go('/lobby/throw-names')
   }, 'Throw in names'),
   state.playerId === state.room.ownerId
-    ? h('button', { class: 'button button--orange button--disabled', disabled: 'true' }, 'Start game')
+    ? h('button', {
+      class: `button button--orange ${startGameEnabled(state) ? '' : 'button--disabled'}`,
+      disabled: !startGameEnabled(state),
+      oncreate: () => console.log(Object.keys(state.room.players).length)
+    }, 'Start game')
     : null
 ])

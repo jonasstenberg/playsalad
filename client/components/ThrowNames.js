@@ -1,5 +1,8 @@
 import { h } from 'hyperapp'
+import fetch from '../utils/pseudo-fetch'
 import names from '../data/names'
+
+import { backendBaseUrl } from '../config'
 
 const randomNames = () => {
   const randomNames = []
@@ -9,7 +12,7 @@ const randomNames = () => {
   return randomNames
 }
 
-const choosenNames = []
+const playerNotes = []
 
 export default (state, actions) => h('div', { class: 'throw-names flex' }, [
   h('h3', { class: 'throw-names__heading lang' }, 'Throw in five names each'),
@@ -19,18 +22,33 @@ export default (state, actions) => h('div', { class: 'throw-names flex' }, [
       return h('li', { class: 'throw-names__name' }, h('input', {
         class: 'throw-names__input input',
         placeholder: name,
-        oncreate: () => (choosenNames[index] = name),
+        oncreate: () => (playerNotes[index] = name),
         oninput: evt => {
           if (evt.target.value) {
-            choosenNames[index] = evt.target.value
+            playerNotes[index] = evt.target.value
           } else {
-            choosenNames[index] = name
+            playerNotes[index] = name
           }
         }
       }))
     })),
   h('button', {
     class: 'button button--orange',
-    onclick: () => console.log(choosenNames)
+    onclick: async () => {
+      await fetch(`${backendBaseUrl}/player`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          playerId: state.playerId,
+          name: state.playerName,
+          roomId: state.room.roomId,
+          notes: playerNotes
+        })
+      })
+
+      actions.location.go('/lobby/player-list/')
+    }
   }, 'Into the salad bowl!')
 ])
