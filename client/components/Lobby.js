@@ -6,10 +6,17 @@ import PlayerList from './PlayerList'
 import ThrowNames from './ThrowNames'
 
 export default (state, actions) => {
-  return h('div', { class: 'lobby flex' }, [
+  return h('div', {
+    class: 'lobby flex',
+    oncreate: () => {
+      if (!state.room || !state.room.roomId) {
+        actions.location.go('/')
+      }
+    }
+  }, [
     h('div', { class: 'lobby__header' }, [
       h('div', { class: 'lobby__heading caption' }, 'Game Room'),
-      h('h1', { class: 'lobby__heading' }, state.room.roomId)
+      h('h1', { class: 'lobby__heading' }, state.room && state.room.roomId ? state.room.roomId : null)
     ]),
     h(Route, {
       path: '/lobby/choose-name',

@@ -27,7 +27,7 @@ wss.on('connection', function connection (ws, req) {
 
   state.players[playerId] = ws
 
-  console.log(playerId)
+  console.log('New user connected:', playerId)
 
   ws.send(JSON.stringify({
     playerId
@@ -44,7 +44,7 @@ wss.on('connection', function connection (ws, req) {
 
   ws.on('close', function () {
     delete state.players[playerId]
-    state.rooms.map(room => {
+    state.rooms = state.rooms.map(room => {
       if (room.players[playerId]) {
         delete room.players[playerId]
 
@@ -52,8 +52,11 @@ wss.on('connection', function connection (ws, req) {
           state.players[p].send(JSON.stringify(room))
         })
       }
+
+      room.team1 = room.team1.filter(t => t !== playerId)
+      room.team2 = room.team2.filter(t => t !== playerId)
       return room
-    })
+    }).filter(room => Object.keys(room.players).length)
     console.log(`Deleted user: ${playerId}`)
   })
 })
@@ -82,7 +85,9 @@ app.post('/rooms', (req, res) => {
       ownerId: playerId,
       players: {
         [playerId]: ''
-      }
+      },
+      team1: [playerId],
+      team2: []
     }
 
     state.rooms.push(room)
@@ -96,8 +101,6 @@ app.post('/rooms', (req, res) => {
 app.post('/rooms/join', (req, res) => {
   const { playerId, roomId } = req.body
 
-  console.log(playerId, roomId)
-
   try {
     const room = state.rooms.find(r => r.roomId === roomId)
     if (!room) {
@@ -107,6 +110,11 @@ app.post('/rooms/join', (req, res) => {
     }
 
     room.players[playerId] = ''
+    if (room.team1.length > room.team2.length) {
+      room.team2.push(playerId)
+    } else {
+      room.team1.push(playerId)
+    }
 
     res.status(HttpStatus.OK).json(room)
   } catch (err) {
