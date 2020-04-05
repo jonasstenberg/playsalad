@@ -6,7 +6,7 @@ const startGameEnabled = (state) => {
   }
   const allHasThrownNotes = Object.keys(state.room.players).every(playerId => state.room.players[playerId].notes && state.room.players[playerId].notes.length)
 
-  return allHasThrownNotes && Object.keys(state.room.players).length > 1
+  return allHasThrownNotes && Object.keys(state.room.players).length > 3
 }
 
 export default (state, actions) => h('div', { class: 'player-list flex' }, [
