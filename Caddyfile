@@ -1,0 +1,28 @@
+xn--salladsskl-95a.se www.xn--salladsskl-95a.se
+
+tls salladbowl@xn--salladsskl-95a.se
+
+#:80
+
+errors {
+    404 index.html
+}
+
+log /api stdout "{common}"
+
+root ./client/dist
+
+proxy /api http://localhost:8080  {
+    transparent
+}
+
+proxy /ws http://localhost:8080 {
+    websocket
+}
+
+header / {
+#    +Content-Security-Policy "default-src 'self' blob: 'unsafe-eval' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:"
+#    +Cache-Control "max-age=3600"
+    -server
+    -last-modified
+}
