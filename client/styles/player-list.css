@@ -21,6 +21,7 @@
 }
 
 .player-list__team-name--ice {
+  padding-top: 0.345rem;
   color: var(--color-blue);
 }
 
