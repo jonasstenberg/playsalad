@@ -53,7 +53,9 @@ wss.on('connection', function connection (ws, req) {
       room.team2 = room.team2.filter(t => t !== playerId)
 
       Object.keys(room.players).forEach(p => {
-        state.players[p].send(JSON.stringify(room))
+        if (state.players && state.players[p]) {
+          state.players[p].send(JSON.stringify(room))
+        }
       })
 
       return room
@@ -78,6 +80,11 @@ app.post('/rooms', (req, res) => {
   const { playerId } = req.body
 
   try {
+    if (!playerId) {
+      res.sendStatus(HttpStatus.NOT_FOUND)
+      return
+    }
+
     const r = Math.random().toString(36)
     const roomId = r.substring(r.length - 4).replace(/0/g, 'o').toUpperCase()
 
@@ -105,6 +112,11 @@ app.post('/rooms/join', (req, res) => {
   const { playerId, roomId } = req.body
 
   try {
+    if (!playerId) {
+      res.sendStatus(HttpStatus.NOT_FOUND)
+      return
+    }
+
     const room = state.rooms.find(r => r.roomId === roomId)
     if (!room) {
       console.log('no room found with that id')
@@ -146,7 +158,9 @@ app.put('/player', (req, res) => {
     }
 
     Object.keys(room.players).forEach(playerId => {
-      state.players[playerId].send(JSON.stringify(room))
+      if (state.players && state.players[playerId]) {
+        state.players[playerId].send(JSON.stringify(room))
+      }
     })
 
     res.sendStatus(HttpStatus.NO_CONTENT)

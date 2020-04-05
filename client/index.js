@@ -29,6 +29,7 @@ connection.onmessage = (e) => {
   if (message.playerId) {
     wiredActions.setPlayerId(message.playerId)
   } else {
+    console.log(message)
     wiredActions.setRoom(message)
   }
 }
