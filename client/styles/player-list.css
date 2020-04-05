@@ -23,6 +23,11 @@
   font-weight: normal;
 }
 
-.player-list__player-owner {
+.player-list__player-checkbox {
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.player-list__player-current {
   font-weight: bold;
 }

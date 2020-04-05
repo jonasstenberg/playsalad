@@ -28,7 +28,7 @@ export default (state, actions) => h('div', {
   h('button', {
     class: 'button button--orange',
     onclick: async () => {
-      const res = await fetch(`${backendBaseUrl}/rooms/join`, {
+      const res = await fetch(`${backendBaseUrl}/api/rooms/join`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -50,7 +50,7 @@ export default (state, actions) => h('div', {
   h('button', {
     class: 'button button--blue',
     onclick: async () => {
-      const res = await fetch(`${backendBaseUrl}/rooms`, {
+      const res = await fetch(`${backendBaseUrl}/api/rooms`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

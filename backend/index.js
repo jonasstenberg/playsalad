@@ -9,7 +9,7 @@ const WebSocket = require('ws')
 const app = express()
 
 const server = http.createServer(app)
-const wss = new WebSocket.Server({ server })
+const wss = new WebSocket.Server({ server, path: '/ws' })
 
 const isProduction = process.env.NODE_ENV === 'production'
 const logFormat = isProduction ? 'tiny' : 'dev'
@@ -76,7 +76,7 @@ setInterval(() => {
   })
 }, 5000)
 
-app.post('/rooms', (req, res) => {
+app.post('/api/rooms', (req, res) => {
   const { playerId } = req.body
 
   try {
@@ -108,7 +108,7 @@ app.post('/rooms', (req, res) => {
   }
 })
 
-app.post('/rooms/join', (req, res) => {
+app.post('/api/rooms/join', (req, res) => {
   const { playerId, roomId } = req.body
 
   try {
@@ -140,8 +140,8 @@ app.post('/rooms/join', (req, res) => {
   }
 })
 
-app.put('/player', (req, res) => {
-  const { playerId, name, notes, roomId } = req.body
+app.put('/api/player', (req, res) => {
+  const { playerId, name, notes, roomId, salladbowl } = req.body
 
   try {
     const room = state.rooms.find(r => r.roomId === roomId)
@@ -152,6 +152,7 @@ app.put('/player', (req, res) => {
       return
     }
 
+    room.salladbowl = salladbowl
     room.players[playerId] = {
       name,
       notes

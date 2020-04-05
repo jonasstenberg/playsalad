@@ -13,6 +13,7 @@
   },
   "scripts": {
     "start": "parcel index.html",
+    "build": "rm -rf .cache && rm -rf dist && parcel build index.html --no-autoinstall",
     "standard": "standard",
     "standard:fix": "standard --fix",
     "stylelint": "stylelint styles/*",

@@ -7,7 +7,12 @@ export default {
 
   setPlayerName: playerName => ({ playerName }),
 
-  setRoom: room => ({ room }),
+  setRoom: room => (state) => {
+    console.log(state)
+    return {
+      room
+    }
+  },
 
   setPlayerId: playerId => ({ playerId }),
 

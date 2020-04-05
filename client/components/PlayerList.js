@@ -18,7 +18,13 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
       h('ul', { class: 'player-list__players' }, [
         state.room && state.room.players && Object.keys(state.room.players).length
           ? state.room.team1.map((playerId) => {
-            return h('li', { class: `player-list__player${playerId === state.room.ownerId ? ' player-list__player-owner' : ''}` }, state.room.players[playerId].notes ? 'yes' : 'no', state.room.players[playerId].name)
+            return h('li', { class: `player-list__player${playerId === state.playerId ? ' player-list__player-current' : ''}` }, [
+              state.room.players[playerId].notes ? h('img', {
+                src: '/images/checkbox.svg',
+                class: 'player-list__player-checkbox'
+              }) : '',
+              h('span', {}, state.room.players[playerId].name)
+            ])
           })
           : null
       ])
@@ -28,7 +34,13 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
       h('ul', { class: 'player-list__players' }, [
         state.room && state.room.players && Object.keys(state.room.players).length
           ? state.room.team2.map((playerId) => {
-            return h('li', { class: `player-list__player${playerId === state.room.ownerId ? ' player-list__player-owner' : ''}` }, state.room.players[playerId].notes ? 'yes' : 'no', state.room.players[playerId].name)
+            return h('li', { class: `player-list__player${playerId === state.playerId ? ' player-list__player-current' : ''}` }, [
+              state.room.players[playerId].notes ? h('img', {
+                src: '/images/checkbox.svg',
+                class: 'player-list__player-checkbox'
+              }) : '',
+              h('span', {}, state.room.players[playerId].name)
+            ])
           })
           : null
       ])

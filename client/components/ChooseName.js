@@ -26,7 +26,7 @@ export default (state, actions) => h('div', { class: 'choose-name flex' },
     h('button', {
       class: 'button button--orange',
       onclick: async () => {
-        await fetch(`${backendBaseUrl}/player`, {
+        await fetch(`${backendBaseUrl}/api/player`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
