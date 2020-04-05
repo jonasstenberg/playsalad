@@ -17,7 +17,10 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
   }, [
     h('div', { class: 'player-list__team' }, [
       h('div', { class: 'player-list__team-name player-list__team-name--red caption' }, [
-        h('img', { src: '/images/fire.svg' }),
+        h('img', {
+          src: '/images/fire.svg',
+          class: 'player-list__team-logo'
+        }),
         'Team fire'
       ]),
       h('ul', { class: 'player-list__players' }, [
@@ -28,7 +31,10 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
     ]),
     h('div', { class: 'player-list__team' }, [
       h('div', { class: 'player-list__team-name player-list__team-name--blue caption' }, [
-        h('img', { src: '/images/ice.svg' }),
+        h('img', {
+          src: '/images/ice.svg',
+          class: 'player-list__team-logo'
+        }),
         'Team ice'
       ]),
       h('ul', { class: 'player-list__players' }, [

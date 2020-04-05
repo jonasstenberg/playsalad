@@ -12,6 +12,10 @@
   flex-basis: 50%;
 }
 
+.player-list__team-logo {
+  margin-right: 0.5rem;
+}
+
 .player-list__players {
   padding: 0;
   font-family: 'Dosis', Verdana, sans-serif;
@@ -24,7 +28,6 @@
 }
 
 .player-list__player-checkbox {
-  margin-top: 0.5rem;
   margin-right: 0.5rem;
 }
 
