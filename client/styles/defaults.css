@@ -8,6 +8,12 @@ html {
   font-size: 16px;
 }
 
+html,
+body,
+main {
+  height: 100%;
+}
+
 body {
   font-family: 'Open Sans', Verdana, sans-serif;
   font-size: 1.125rem;

@@ -5,6 +5,7 @@ import CreateJoin from './CreateJoin'
 import Lobby from './Lobby'
 import Game from './Game'
 import Rules from './Rules'
+import TimesUp from './TimesUp'
 
 export default (state, actions) => h('main', {}, [
   h(Route, {
@@ -24,5 +25,10 @@ export default (state, actions) => h('main', {}, [
   h(Route, {
     path: '/rules/',
     render: () => Rules(state, actions)
+  }),
+  // Temp routes for component dev
+  h(Route, {
+    path: '/times-up',
+    render: () => TimesUp(state, actions)
   })
 ])
