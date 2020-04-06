@@ -6,6 +6,7 @@ import Lobby from './Lobby'
 import Game from './Game'
 import Rules from './Rules'
 import TimesUp from './TimesUp'
+import EmptyBowl from './EmptyBowl'
 
 export default (state, actions) => h('main', {}, [
   h(Route, {
@@ -30,5 +31,9 @@ export default (state, actions) => h('main', {}, [
   h(Route, {
     path: '/times-up',
     render: () => TimesUp(state, actions)
+  }),
+  h(Route, {
+    path: '/empty-bowl',
+    render: () => EmptyBowl(state, actions)
   })
 ])

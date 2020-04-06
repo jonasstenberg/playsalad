@@ -1,0 +1,16 @@
+.empty-bowl {
+  justify-content: center;
+  height: 100%;
+  background: radial-gradient(50% 50% at 50% 50%, #9bc1bc 0%, #5ca4a9 100%);
+}
+
+.empty-bowl__heading {
+  margin: 1rem 0;
+  color: var(--color-white);
+}
+
+.empty-bowl__text {
+  padding: 1rem;
+  font-size: 1.5rem;
+  color: var(--color-white);
+}
