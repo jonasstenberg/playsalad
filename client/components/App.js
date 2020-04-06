@@ -6,7 +6,7 @@ import Lobby from './Lobby'
 import Game from './Game'
 import Rules from './Rules'
 
-export default (state, actions) => h('div', {}, [
+export default (state, actions) => h('main', {}, [
   h(Route, {
     path: '/',
     render: () => CreateJoin(state, actions)
