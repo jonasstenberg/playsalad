@@ -31,6 +31,9 @@ connection.onmessage = (e) => {
   } else {
     console.log(message)
     wiredActions.setRoom(message)
+    if (message.salladBowl && message.salladBowl.length) {
+      actions.location.go('/game/intro')
+    }
   }
 }
 

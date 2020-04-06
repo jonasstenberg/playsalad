@@ -1,9 +1,21 @@
 import { h } from 'hyperapp'
-// import fetch from '../utils/pseudo-fetch'
+import { Route } from '@hyperapp/router'
 
-// import { backendBaseUrl } from '../config'
+import GameIntro from './GameIntro'
+import GameRound from './GameRound'
 
 export default (state, actions) => h('div', {
-  class: 'create-join flex',
-  oncreate: () => console.log(state.room)
-}, 'Sooon...')
+  class: 'game',
+  oncreate: () => {
+    console.log('game', state)
+  }
+}, [
+  h(Route, {
+    path: '/game/intro',
+    render: () => GameIntro(state, actions)
+  }),
+  h(Route, {
+    path: '/game/round',
+    render: () => GameRound(state, actions)
+  })
+])

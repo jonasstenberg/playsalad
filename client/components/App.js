@@ -17,7 +17,8 @@ export default (state, actions) => h('div', {}, [
     render: () => Lobby(state, actions)
   }),
   h(Route, {
-    path: '/game/',
+    path: '/game',
+    parent: true,
     render: () => Game(state, actions)
   }),
   h(Route, {

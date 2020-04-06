@@ -93,7 +93,8 @@ app.post('/api/rooms', (req, res) => {
       ownerId: playerId,
       players: {
         [playerId]: {
-          name: ''
+          name: '',
+          score: 0
         }
       },
       team1: [playerId],
@@ -125,7 +126,8 @@ app.post('/api/rooms/join', (req, res) => {
     }
 
     room.players[playerId] = {
-      name: ''
+      name: '',
+      score: 0
     }
     if (room.team1.length > room.team2.length) {
       room.team2.push(playerId)
@@ -165,6 +167,32 @@ app.put('/api/player', (req, res) => {
     })
 
     res.sendStatus(HttpStatus.NO_CONTENT)
+  } catch (err) {
+    console.log(err)
+    res.status(HttpStatus.NOT_FOUND).send(err)
+  }
+})
+
+app.post('/api/startGame', (req, res) => {
+  const { roomId } = req.body
+
+  try {
+    const room = state.rooms.find(r => r.roomId === roomId)
+
+    room.salladBowl = Object.keys(room.players).reduce((acc, curr) => {
+      acc.push(...room.players[curr].notes)
+      return acc
+    }, [])
+    room.round1 = room.salladBowl.slice(0)
+    room.round2 = room.salladBowl.slice(0)
+    room.round3 = room.salladBowl.slice(0)
+    room.activeRound = 1
+
+    Object.keys(room.players).forEach(playerId => {
+      if (state.players && state.players[playerId]) {
+        state.players[playerId].send(JSON.stringify(room))
+      }
+    })
   } catch (err) {
     console.log(err)
     res.status(HttpStatus.NOT_FOUND).send(err)
