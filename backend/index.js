@@ -29,56 +29,55 @@ wss.on('connection', function connection (ws, req) {
 
   console.log('New user connected:', playerId)
 
-  // ws.send(JSON.stringify({
-  //   playerId
-  // }))
+  ws.send(JSON.stringify({
+    playerId
+  }))
 
-  let room = state.rooms.find(r => r.roomId === 'ABCD')
-
-  if (!room) {
-    room = {
-      roomId: 'ABCD',
-      ownerId: playerId,
-      players: {
-        [playerId]: {
-          name: 'Arne',
-          score: 0,
-          team: 'fire',
-          notes: [
-            'asdf',
-            'fdsa',
-            'gqreg',
-            'hyterh',
-            'ewrtwer'
-          ]
-        }
-      }
-    }
-    state.rooms.push(room)
-  } else {
-    room.players[playerId] = {
-      name: 'Weise',
-      score: 0,
-      team: Object.keys(room.players).filter(p => room.players[p].team === 'fire').length > Object.keys(room.players).filter(p => room.players[p].team === 'ice').length ? 'ice' : 'fire',
-      notes: [
-        'asdf',
-        'fdsa',
-        'gqreg',
-        'hyterh',
-        'ewrtwer'
-      ]
-    }
-
-    Object.keys(room.players).forEach(playerId => {
-      if (state.players && state.players[playerId]) {
-        state.players[playerId].send(JSON.stringify(room))
-      }
-    })
-  }
+  // let room = state.rooms.find(r => r.roomId === 'ABCD')
+  //
+  // if (!room) {
+  //   room = {
+  //     roomId: 'ABCD',
+  //     ownerId: playerId,
+  //     players: {
+  //       [playerId]: {
+  //         name: 'Arne',
+  //         score: 0,
+  //         team: 'fire',
+  //         notes: [
+  //           'asdf',
+  //           'fdsa',
+  //           'gqreg',
+  //           'hyterh',
+  //           'ewrtwer'
+  //         ]
+  //       }
+  //     }
+  //   }
+  //   state.rooms.push(room)
+  // } else {
+  //   room.players[playerId] = {
+  //     name: 'Weise',
+  //     score: 0,
+  //     team: Object.keys(room.players).filter(p => room.players[p].team === 'fire').length > Object.keys(room.players).filter(p => room.players[p].team === 'ice').length ? 'ice' : 'fire',
+  //     notes: [
+  //       'asdf',
+  //       'fdsa',
+  //       'gqreg',
+  //       'hyterh',
+  //       'ewrtwer'
+  //     ]
+  //   }
+  //
+  //   Object.keys(room.players).forEach(playerId => {
+  //     if (state.players && state.players[playerId]) {
+  //       state.players[playerId].send(JSON.stringify(room))
+  //     }
+  //   })
+  // }
 
   ws.send(JSON.stringify({
-    playerId,
-    room
+    playerId
   }))
 
   ws.on('pong', () => {
@@ -94,32 +93,32 @@ wss.on('connection', function connection (ws, req) {
     if (state.players[playerId]) {
       delete state.players[playerId]
       // TODO remove this when done
-      const room = state.rooms.find(r => r.roomId === 'ABCD')
-      if (room && room.players && Object.keys(room.players).length >= 4) {
-        state.rooms = []
-      } else {
-        if (room && room.players) {
-          Object.keys(room.players).forEach(p => {
-            if (state.players && state.players[p]) {
-              state.players[p].send(JSON.stringify(room))
-            }
-          })
-        }
-      }
-      // state.rooms = state.rooms.map(room => {
-      //   if (room.players[playerId]) {
-      //     delete room.players[playerId]
+      // const room = state.rooms.find(r => r.roomId === 'ABCD')
+      // if (room && room.players && Object.keys(room.players).length >= 4) {
+      //   state.rooms = []
+      // } else {
+      //   if (room && room.players) {
+      //     Object.keys(room.players).forEach(p => {
+      //       if (state.players && state.players[p]) {
+      //         state.players[p].send(JSON.stringify(room))
+      //       }
+      //     })
       //   }
-      //
-      //   Object.keys(room.players).forEach(p => {
-      //     if (state.players && state.players[p]) {
-      //       state.players[p].send(JSON.stringify(room))
-      //     }
-      //   })
-      //
-      //   return room
-      // }).filter(room => Object.keys(room.players).length)
-      // console.log(`Deleted user: ${playerId}`)
+      // }
+      state.rooms = state.rooms.map(room => {
+        if (room.players[playerId]) {
+          delete room.players[playerId]
+        }
+
+        Object.keys(room.players).forEach(p => {
+          if (state.players && state.players[p]) {
+            state.players[p].send(JSON.stringify(room))
+          }
+        })
+
+        return room
+      }).filter(room => Object.keys(room.players).length)
+      console.log(`Deleted user: ${playerId}`)
     }
   })
 })
