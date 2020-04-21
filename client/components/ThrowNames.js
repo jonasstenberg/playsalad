@@ -1,8 +1,5 @@
 import { h } from 'hyperapp'
-import fetch from '../utils/pseudo-fetch'
 import names from '../data/names'
-
-import { backendBaseUrl } from '../config'
 
 const randomNames = () => {
   const randomNames = []
@@ -35,17 +32,11 @@ export default (state, actions) => h('div', { class: 'throw-names flex' }, [
   h('button', {
     class: 'button button--orange',
     onclick: async () => {
-      await fetch(`${backendBaseUrl}/player`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          playerId: state.playerId,
-          name: state.playerName,
-          roomId: state.room.roomId,
-          notes: playerNotes
-        })
+      await actions.updateRoom({
+        playerId: state.playerId,
+        name: state.playerName,
+        roomId: state.room.roomId,
+        notes: playerNotes
       })
 
       actions.location.go('/lobby/player-list/')

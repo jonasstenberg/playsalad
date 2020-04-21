@@ -24,15 +24,46 @@ const wiredActions = app(
 
 location.subscribe(wiredActions.location)
 
+const calculateRemainingTime = (endTime, callback) => {
+  if (!endTime) {
+    console.log('endtime not set')
+    return 0
+  }
+  const now = new Date().getTime()
+  const distance = new Date(endTime).getTime() - now
+
+  callback(Math.floor((distance % (1000 * 60)) / 1000))
+}
+
 connection.onmessage = (e) => {
   const message = JSON.parse(e.data)
   if (message.playerId) {
     wiredActions.setPlayerId(message.playerId)
+    if (message.room) {
+      wiredActions.setRoom(message.room)
+      console.log(message.room)
+      actions.location.go('/lobby/player-list')
+    }
   } else {
+    console.log('updating room')
     console.log(message)
     wiredActions.setRoom(message)
-    if (message.salladBowl && message.salladBowl.length) {
-      actions.location.go('/game/intro')
+    switch (message.action) {
+      case 'startGame':
+        actions.location.go('/game/intro')
+        break
+      case 'startTurn':
+        calculateRemainingTime(message.endTime, (distance) => {
+          wiredActions.setTimeRemaining(distance)
+        })
+        setInterval(() => calculateRemainingTime(message.endTime, (distance) => {
+          if (distance < 0) {
+            clearInterval(calculateRemainingTime)
+            return
+          }
+          wiredActions.setTimeRemaining(distance)
+        }), 1000)
+        break
     }
   }
 }

@@ -29,8 +29,56 @@ wss.on('connection', function connection (ws, req) {
 
   console.log('New user connected:', playerId)
 
+  // ws.send(JSON.stringify({
+  //   playerId
+  // }))
+
+  let room = state.rooms.find(r => r.roomId === 'ABCD')
+
+  if (!room) {
+    room = {
+      roomId: 'ABCD',
+      ownerId: playerId,
+      players: {
+        [playerId]: {
+          name: 'Arne',
+          score: 0,
+          team: 'fire',
+          notes: [
+            'asdf',
+            'fdsa',
+            'gqreg',
+            'hyterh',
+            'ewrtwer'
+          ]
+        }
+      }
+    }
+    state.rooms.push(room)
+  } else {
+    room.players[playerId] = {
+      name: 'Weise',
+      score: 0,
+      team: Object.keys(room.players).filter(p => room.players[p].team === 'fire').length > Object.keys(room.players).filter(p => room.players[p].team === 'ice').length ? 'ice' : 'fire',
+      notes: [
+        'asdf',
+        'fdsa',
+        'gqreg',
+        'hyterh',
+        'ewrtwer'
+      ]
+    }
+
+    Object.keys(room.players).forEach(playerId => {
+      if (state.players && state.players[playerId]) {
+        state.players[playerId].send(JSON.stringify(room))
+      }
+    })
+  }
+
   ws.send(JSON.stringify({
-    playerId
+    playerId,
+    room
   }))
 
   ws.on('pong', () => {
@@ -43,24 +91,36 @@ wss.on('connection', function connection (ws, req) {
   })
 
   ws.on('close', function () {
-    delete state.players[playerId]
-    state.rooms = state.rooms.map(room => {
-      if (room.players[playerId]) {
-        delete room.players[playerId]
-      }
-
-      room.team1 = room.team1.filter(t => t !== playerId)
-      room.team2 = room.team2.filter(t => t !== playerId)
-
-      Object.keys(room.players).forEach(p => {
-        if (state.players && state.players[p]) {
-          state.players[p].send(JSON.stringify(room))
+    if (state.players[playerId]) {
+      delete state.players[playerId]
+      // TODO remove this when done
+      const room = state.rooms.find(r => r.roomId === 'ABCD')
+      if (room && room.players && Object.keys(room.players).length >= 4) {
+        state.rooms = []
+      } else {
+        if (room && room.players) {
+          Object.keys(room.players).forEach(p => {
+            if (state.players && state.players[p]) {
+              state.players[p].send(JSON.stringify(room))
+            }
+          })
         }
-      })
-
-      return room
-    }).filter(room => Object.keys(room.players).length)
-    console.log(`Deleted user: ${playerId}`)
+      }
+      // state.rooms = state.rooms.map(room => {
+      //   if (room.players[playerId]) {
+      //     delete room.players[playerId]
+      //   }
+      //
+      //   Object.keys(room.players).forEach(p => {
+      //     if (state.players && state.players[p]) {
+      //       state.players[p].send(JSON.stringify(room))
+      //     }
+      //   })
+      //
+      //   return room
+      // }).filter(room => Object.keys(room.players).length)
+      // console.log(`Deleted user: ${playerId}`)
+    }
   })
 })
 
@@ -72,7 +132,9 @@ setInterval(() => {
     }
 
     ws.isAlive = false
-    ws.ping(null, false, true)
+    if (ws) {
+      ws.ping(null, false, true)
+    }
   })
 }, 5000)
 
@@ -94,11 +156,10 @@ app.post('/api/rooms', (req, res) => {
       players: {
         [playerId]: {
           name: '',
-          score: 0
+          score: 0,
+          team: 'fire'
         }
-      },
-      team1: [playerId],
-      team2: []
+      }
     }
 
     state.rooms.push(room)
@@ -114,6 +175,7 @@ app.post('/api/rooms/join', (req, res) => {
 
   try {
     if (!playerId) {
+      console.log('no player found with that id')
       res.sendStatus(HttpStatus.NOT_FOUND)
       return
     }
@@ -127,12 +189,8 @@ app.post('/api/rooms/join', (req, res) => {
 
     room.players[playerId] = {
       name: '',
-      score: 0
-    }
-    if (room.team1.length > room.team2.length) {
-      room.team2.push(playerId)
-    } else {
-      room.team1.push(playerId)
+      score: 0,
+      team: Object.keys(room.players).filter(p => room.players[p].team === 'fire').length > Object.keys(room.players).filter(p => room.players[p].team === 'ice').length ? 'ice' : 'fire'
     }
 
     res.status(HttpStatus.OK).json(room)
@@ -142,8 +200,8 @@ app.post('/api/rooms/join', (req, res) => {
   }
 })
 
-app.put('/api/player', (req, res) => {
-  const { playerId, name, notes, roomId, salladbowl } = req.body
+app.put('/api/rooms', (req, res) => {
+  const { playerId, name, notes, roomId, salladBowl, endTime } = req.body
 
   try {
     const room = state.rooms.find(r => r.roomId === roomId)
@@ -154,15 +212,21 @@ app.put('/api/player', (req, res) => {
       return
     }
 
-    room.salladbowl = salladbowl
+    room.salladBowl = salladBowl
+    room.endTime = endTime
+
     room.players[playerId] = {
+      ...room.players[playerId],
       name,
       notes
     }
 
     Object.keys(room.players).forEach(playerId => {
       if (state.players && state.players[playerId]) {
-        state.players[playerId].send(JSON.stringify(room))
+        state.players[playerId].send(JSON.stringify({
+          ...room,
+          action: endTime ? 'startTurn' : 'updateRoom'
+        }))
       }
     })
 
@@ -180,7 +244,9 @@ app.post('/api/startGame', (req, res) => {
     const room = state.rooms.find(r => r.roomId === roomId)
 
     room.salladBowl = Object.keys(room.players).reduce((acc, curr) => {
-      acc.push(...room.players[curr].notes)
+      if (room.players && room.players[curr] && room.players[curr].notes) {
+        acc.push(...room.players[curr].notes)
+      }
       return acc
     }, [])
     room.round1 = room.salladBowl.slice(0)
@@ -188,9 +254,16 @@ app.post('/api/startGame', (req, res) => {
     room.round3 = room.salladBowl.slice(0)
     room.activeRound = 1
 
+    room.playerPool = Object.keys(room.players)
+    room.activePlayer = room.playerPool.splice(Math.floor(Math.random() * room.playerPool.length), 1)[0]
+    room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
+
     Object.keys(room.players).forEach(playerId => {
       if (state.players && state.players[playerId]) {
-        state.players[playerId].send(JSON.stringify(room))
+        state.players[playerId].send(JSON.stringify({
+          ...room,
+          action: 'startGame'
+        }))
       }
     })
   } catch (err) {

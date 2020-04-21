@@ -10,22 +10,59 @@ export default {
 
   setPlayerName: playerName => ({ playerName }),
 
-  setRoom: room => ({ room }),
-
   setPlayerId: playerId => ({ playerId }),
 
   setErrorText: errorText => ({ errorText }),
 
-  startGame: () => async (state) => {
-    await fetch(`${backendBaseUrl}/startGame`, {
+  setRoom: room => ({ room }),
+
+  createRoom: (playerId) => async (_, actions) => {
+    const res = await fetch(`${backendBaseUrl}/rooms`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        playerId: state.playerId,
-        roomId: state.room.roomId
+        playerId: playerId
       })
     })
-  }
+    const json = await res.json()
+    actions.setRoom(json)
+  },
+
+  joinRoom: async (room) => {
+    const res = await fetch(`${backendBaseUrl}/rooms/join`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(room)
+    })
+
+    if (res.status === 404) {
+      throw new Error('No room with that id')
+    }
+  },
+
+  updateRoom: (room) => async () => {
+    await fetch(`${backendBaseUrl}/rooms`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(room)
+    })
+  },
+
+  startGame: async (room) => {
+    await fetch(`${backendBaseUrl}/startGame`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(room)
+    })
+  },
+
+  setTimeRemaining: timeRemaining => ({ timeRemaining })
 }

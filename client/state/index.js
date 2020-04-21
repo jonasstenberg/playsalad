@@ -4,7 +4,10 @@ export default {
   location: location.state,
   backendUrl: 'http://localhost:8080',
   players: [],
-  room: {},
+  room: {
+    activeRound: 1
+  },
+  timeRemaining: 60,
   games: {
     1: {
       name: 'Forbidden Word',
