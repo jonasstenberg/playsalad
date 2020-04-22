@@ -33,9 +33,7 @@ export default (state, actions) => h('div', { class: 'throw-names flex' }, [
     class: 'button button--orange',
     onclick: async () => {
       await actions.updateRoom({
-        playerId: state.playerId,
         name: state.playerName,
-        roomId: state.room.roomId,
         notes: playerNotes
       })
 

@@ -1,8 +1,9 @@
 import { h } from 'hyperapp'
-import { Route } from '@hyperapp/router'
 
 import GameIntro from './GameIntro'
 import GameRound from './GameRound'
+import TimesUp from './TimesUp'
+import Done from './Done'
 
 export default (state, actions) => {
   if (!state.room || !state.room.players) {
@@ -13,14 +14,19 @@ export default (state, actions) => {
     oncreate: () => {
       console.log('game', state)
     }
-  }, [
-    h(Route, {
-      path: '/game/intro',
-      render: () => GameIntro(state, actions)
-    }),
-    h(Route, {
-      path: '/game/round',
-      render: () => GameRound(state, actions)
-    })
-  ])
+  }, (() => {
+    switch (state.room.gameState) {
+      case 'intro':
+        return GameIntro(state, actions)
+      case 'round':
+        return GameRound(state, actions)
+      case 'timeout':
+        return TimesUp(state, actions)
+      case 'done':
+        return Done(state, actions)
+      default:
+        actions.location.go('/')
+        break
+    }
+  })())
 }

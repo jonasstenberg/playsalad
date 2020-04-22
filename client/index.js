@@ -12,7 +12,6 @@ import App from './components/App'
 require('@babel/polyfill')
 
 const connection = new WebSocket(websocketUrl)
-
 state.wsConnection = connection
 
 const wiredActions = app(
@@ -35,6 +34,8 @@ const calculateRemainingTime = (endTime, callback) => {
   callback(Math.floor((distance % (1000 * 60)) / 1000))
 }
 
+let timerId
+
 connection.onmessage = (e) => {
   const message = JSON.parse(e.data)
   if (message.playerId) {
@@ -50,19 +51,31 @@ connection.onmessage = (e) => {
     wiredActions.setRoom(message)
     switch (message.action) {
       case 'startGame':
-        actions.location.go('/game/intro')
+        actions.location.go('/game')
         break
       case 'startTurn':
         calculateRemainingTime(message.endTime, (distance) => {
           wiredActions.setTimeRemaining(distance)
         })
-        setInterval(() => calculateRemainingTime(message.endTime, (distance) => {
+        clearInterval(timerId)
+        timerId = setInterval(() => calculateRemainingTime(message.endTime, (distance) => {
+          console.log(`distance: ${distance} ${timerId}`)
           if (distance < 0) {
-            clearInterval(calculateRemainingTime)
+            clearInterval(timerId)
+            wiredActions.timesUp()
+            setTimeout(() => {
+              wiredActions.setGameState('round')
+            }, 3000)
             return
           }
           wiredActions.setTimeRemaining(distance)
         }), 1000)
+        break
+      case 'done':
+        clearInterval(timerId)
+        setTimeout(() => {
+          wiredActions.setGameState('intro')
+        }, 3000)
         break
     }
   }

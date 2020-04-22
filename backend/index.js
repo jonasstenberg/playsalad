@@ -20,6 +20,19 @@ app.use(morgan(logFormat))
 
 const state = require('./state')
 
+const broadcast = (room, action) => {
+  if (room && room.players) {
+    Object.keys(room.players).forEach(playerId => {
+      if (state.players && state.players[playerId]) {
+        state.players[playerId].send(JSON.stringify({
+          ...room,
+          action
+        }))
+      }
+    })
+  }
+}
+
 wss.on('connection', function connection (ws, req) {
   ws.isAlive = true
 
@@ -29,55 +42,52 @@ wss.on('connection', function connection (ws, req) {
 
   console.log('New user connected:', playerId)
 
-  ws.send(JSON.stringify({
-    playerId
-  }))
+  // ws.send(JSON.stringify({
+  //   playerId
+  // }))
 
-  // let room = state.rooms.find(r => r.roomId === 'ABCD')
-  //
-  // if (!room) {
-  //   room = {
-  //     roomId: 'ABCD',
-  //     ownerId: playerId,
-  //     players: {
-  //       [playerId]: {
-  //         name: 'Arne',
-  //         score: 0,
-  //         team: 'fire',
-  //         notes: [
-  //           'asdf',
-  //           'fdsa',
-  //           'gqreg',
-  //           'hyterh',
-  //           'ewrtwer'
-  //         ]
-  //       }
-  //     }
-  //   }
-  //   state.rooms.push(room)
-  // } else {
-  //   room.players[playerId] = {
-  //     name: 'Weise',
-  //     score: 0,
-  //     team: Object.keys(room.players).filter(p => room.players[p].team === 'fire').length > Object.keys(room.players).filter(p => room.players[p].team === 'ice').length ? 'ice' : 'fire',
-  //     notes: [
-  //       'asdf',
-  //       'fdsa',
-  //       'gqreg',
-  //       'hyterh',
-  //       'ewrtwer'
-  //     ]
-  //   }
-  //
-  //   Object.keys(room.players).forEach(playerId => {
-  //     if (state.players && state.players[playerId]) {
-  //       state.players[playerId].send(JSON.stringify(room))
-  //     }
-  //   })
-  // }
+  let room = state.rooms.find(r => r.roomId === 'ABCD')
+
+  if (!room) {
+    room = {
+      roomId: 'ABCD',
+      ownerId: playerId,
+      players: {
+        [playerId]: {
+          name: 'Arne',
+          score: 0,
+          team: 'fire',
+          notes: [
+            'asdf',
+            'fdsa',
+            'gqreg',
+            'hyterh',
+            'ewrtwer'
+          ]
+        }
+      }
+    }
+    state.rooms.push(room)
+  } else {
+    room.players[playerId] = {
+      name: `Weise ${playerId}`,
+      score: 0,
+      team: Object.keys(room.players).filter(p => room.players[p].team === 'fire').length > Object.keys(room.players).filter(p => room.players[p].team === 'ice').length ? 'ice' : 'fire',
+      notes: [
+        'asdf',
+        'fdsa',
+        'gqreg',
+        'hyterh',
+        'ewrtwer'
+      ]
+    }
+
+    broadcast(room, 'init')
+  }
 
   ws.send(JSON.stringify({
-    playerId
+    playerId,
+    room
   }))
 
   ws.on('pong', () => {
@@ -93,32 +103,26 @@ wss.on('connection', function connection (ws, req) {
     if (state.players[playerId]) {
       delete state.players[playerId]
       // TODO remove this when done
-      // const room = state.rooms.find(r => r.roomId === 'ABCD')
-      // if (room && room.players && Object.keys(room.players).length >= 4) {
-      //   state.rooms = []
-      // } else {
-      //   if (room && room.players) {
-      //     Object.keys(room.players).forEach(p => {
-      //       if (state.players && state.players[p]) {
-      //         state.players[p].send(JSON.stringify(room))
-      //       }
-      //     })
+      const room = state.rooms.find(r => r.roomId === 'ABCD')
+      if (room && room.players && Object.keys(room.players).length >= 4) {
+        state.rooms = []
+      } else {
+        broadcast(room, 'removePlayer')
+      }
+      // state.rooms = state.rooms.map(room => {
+      //   if (room.players[playerId]) {
+      //     delete room.players[playerId]
       //   }
-      // }
-      state.rooms = state.rooms.map(room => {
-        if (room.players[playerId]) {
-          delete room.players[playerId]
-        }
-
-        Object.keys(room.players).forEach(p => {
-          if (state.players && state.players[p]) {
-            state.players[p].send(JSON.stringify(room))
-          }
-        })
-
-        return room
-      }).filter(room => Object.keys(room.players).length)
-      console.log(`Deleted user: ${playerId}`)
+      //
+      //   Object.keys(room.players).forEach(p => {
+      //     if (state.players && state.players[p]) {
+      //       state.players[p].send(JSON.stringify(room))
+      //     }
+      //   })
+      //
+      //   return room
+      // }).filter(room => Object.keys(room.players).length)
+      // console.log(`Deleted user: ${playerId}`)
     }
   })
 })
@@ -200,34 +204,44 @@ app.post('/api/rooms/join', (req, res) => {
 })
 
 app.put('/api/rooms', (req, res) => {
-  const { playerId, name, notes, roomId, salladBowl, endTime } = req.body
+  const { playerId, name, notes, roomId, salladBowl, endTime, gameState } = req.body
 
   try {
     const room = state.rooms.find(r => r.roomId === roomId)
 
     if (!room) {
-      console.log('no room found with that id')
+      console.log(`no room found with that id: ${roomId}`)
       res.sendStatus(HttpStatus.NOT_FOUND)
       return
     }
 
-    room.salladBowl = salladBowl
-    room.endTime = endTime
-
-    room.players[playerId] = {
-      ...room.players[playerId],
-      name,
-      notes
+    if (salladBowl) {
+      room.salladBowl = salladBowl
     }
 
-    Object.keys(room.players).forEach(playerId => {
-      if (state.players && state.players[playerId]) {
-        state.players[playerId].send(JSON.stringify({
-          ...room,
-          action: endTime ? 'startTurn' : 'updateRoom'
-        }))
+    if (endTime) {
+      room.endTime = endTime
+    }
+
+    if (gameState) {
+      room.gameState = gameState
+    }
+
+    if (name) {
+      room.players[playerId] = {
+        ...room.players[playerId],
+        name
       }
-    })
+    }
+
+    if (notes) {
+      room.players[playerId] = {
+        ...room.players[playerId],
+        notes
+      }
+    }
+
+    broadcast(room, endTime ? 'startTurn' : 'updateRoom')
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -248,23 +262,84 @@ app.post('/api/startGame', (req, res) => {
       }
       return acc
     }, [])
-    room.round1 = room.salladBowl.slice(0)
-    room.round2 = room.salladBowl.slice(0)
-    room.round3 = room.salladBowl.slice(0)
     room.activeRound = 1
+    room.gameState = 'intro'
 
-    room.playerPool = Object.keys(room.players)
-    room.activePlayer = room.playerPool.splice(Math.floor(Math.random() * room.playerPool.length), 1)[0]
+    room.activePlayer = Object.keys(room.players)[Math.floor(Math.random() * Object.keys(room.players).length)]
+    room.playersPlayed = [room.activePlayer]
+    room.activeTeam = room.players[room.activePlayer].team
     room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
 
-    Object.keys(room.players).forEach(playerId => {
-      if (state.players && state.players[playerId]) {
-        state.players[playerId].send(JSON.stringify({
-          ...room,
-          action: 'startGame'
-        }))
-      }
-    })
+    broadcast(room, 'startGame')
+
+    res.sendStatus(HttpStatus.NO_CONTENT)
+  } catch (err) {
+    console.log(err)
+    res.status(HttpStatus.NOT_FOUND).send(err)
+  }
+})
+
+app.post('/api/correctGuess', (req, res) => {
+  const { playerId, roomId } = req.body
+
+  try {
+    const room = state.rooms.find(r => r.roomId === roomId)
+
+    room.players[playerId].score += 1
+
+    if (!room.salladBowl.length) {
+      room.salladBowl = Object.keys(room.players).reduce((acc, curr) => {
+        if (room.players && room.players[curr] && room.players[curr].notes) {
+          acc.push(...room.players[curr].notes)
+        }
+        return acc
+      }, [])
+      room.activeRound += 1
+      room.gameState = 'done'
+
+      room.activePlayer = Object.keys(room.players)[Math.floor(Math.random() * Object.keys(room.players).length)]
+      room.playersPlayed = [room.activePlayer]
+      room.activeTeam = room.players[room.activePlayer].team
+      room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
+      room.endTime = null
+
+      broadcast(room, 'done')
+    } else {
+      room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
+
+      broadcast(room, 'correctGuess')
+    }
+
+    res.sendStatus(HttpStatus.NO_CONTENT)
+  } catch (err) {
+    console.log(err)
+    res.status(HttpStatus.NOT_FOUND).send(err)
+  }
+})
+
+app.post('/api/timesUp', (req, res) => {
+  const { roomId, endTime } = req.body
+
+  try {
+    const room = state.rooms.find(r => r.roomId === roomId)
+
+    room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
+
+    if (room.playersPlayed.length === Object.keys(room.players).length) {
+      room.playersPlayed = []
+    }
+
+    const playerPool = Object.keys(room.players)
+      .filter(playerId => room.players[playerId].team !== room.activeTeam && !room.playersPlayed.includes(playerId))
+    room.activePlayer = playerPool[Math.floor(Math.random() * playerPool.length)]
+    room.playersPlayed.push(room.activePlayer)
+
+    room.activeTeam = room.players[room.activePlayer].team
+    room.endTime = endTime
+
+    broadcast(room, 'startTurn')
+
+    res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
     console.log(err)
     res.status(HttpStatus.NOT_FOUND).send(err)

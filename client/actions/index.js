@@ -1,7 +1,7 @@
 import { location } from '@hyperapp/router'
 import fetch from '../utils/pseudo-fetch'
 
-import { backendBaseUrl } from '../config'
+import { backendBaseUrl, timeout } from '../config'
 
 export default {
   location: location.actions,
@@ -15,6 +15,16 @@ export default {
   setErrorText: errorText => ({ errorText }),
 
   setRoom: room => ({ room }),
+
+  setGameState: (gameState) => (state) => {
+    console.log(gameState)
+    return {
+      room: {
+        ...state.room,
+        gameState
+      }
+    }
+  },
 
   createRoom: (playerId) => async (_, actions) => {
     const res = await fetch(`${backendBaseUrl}/rooms`, {
@@ -44,13 +54,17 @@ export default {
     }
   },
 
-  updateRoom: (room) => async () => {
+  updateRoom: (room) => async (state) => {
     await fetch(`${backendBaseUrl}/rooms`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(room)
+      body: JSON.stringify({
+        playerId: state.playerId,
+        roomId: state.room.roomId,
+        ...room
+      })
     })
   },
 
@@ -64,5 +78,37 @@ export default {
     })
   },
 
-  setTimeRemaining: timeRemaining => ({ timeRemaining })
+  setTimeRemaining: timeRemaining => ({ timeRemaining }),
+
+  correctGuess: async ({ playerId, roomId }) => {
+    await fetch(`${backendBaseUrl}/correctGuess`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        playerId,
+        roomId
+      })
+    })
+  },
+
+  timesUp: () => async (state) => {
+    if (state.playerId === state.room.activePlayer) {
+      console.log('calling times up')
+      const endTime = new Date()
+      endTime.setSeconds(endTime.getSeconds() + timeout)
+
+      await fetch(`${backendBaseUrl}/timesUp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          roomId: state.room.roomId,
+          endTime
+        })
+      })
+    }
+  }
 }

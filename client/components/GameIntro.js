@@ -23,7 +23,7 @@ export default (state, actions) => h('div', {
   h('button', {
     class: 'button button--orange',
     onclick: () => {
-      actions.location.go('/game/round')
+      actions.setGameState('round')
     }
   }, 'OK!')
 ])

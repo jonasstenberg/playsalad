@@ -1,5 +1,7 @@
 import { h } from 'hyperapp'
 
+import { timeout } from '../config'
+
 const teamScore = (players, team) => Object.keys(players).reduce((acc, playerId) => {
   if (players[playerId].team === team) {
     acc += players[playerId].score
@@ -22,16 +24,25 @@ export default (state, actions) => {
       ? h('span', { class: `active--word ${state.playerId !== state.room.activePlayer ? ' blurred' : ''}` }, state.room.activeWord)
       : '',
     state.playerId === state.room.activePlayer && state.room.endTime
-      ? h('button', {}, 'Correct!')
+      ? h('button', {
+        onclick: async () => {
+          await actions.correctGuess({
+            playerId: state.room.activePlayer,
+            roomId: state.room.roomId
+          })
+        }
+      }, 'Correct!')
       : '',
     h('span', {}, `${state.room.players[state.room.activePlayer].team}`),
     h('span', {}, `${state.room.players[state.room.activePlayer].name}`),
     state.room.endTime
-      ? h('span', {
-        oncreate: () => {
-          console.log('oncreate')
-        }
-      }, `started ${state.timeRemaining}`)
+      ? state.timeRemaining >= 0
+        ? h('span', {
+          oncreate: () => {
+            console.log('oncreate')
+          }
+        }, `started ${state.timeRemaining}`)
+        : ''
       : h('span', {}, '01:00'),
     !state.room.endTime
       ? state.playerId === state.room.activePlayer
@@ -41,14 +52,13 @@ export default (state, actions) => {
             onclick: async () => {
               console.log('starting turn')
               const endTime = new Date()
-              endTime.setSeconds(endTime.getSeconds() + 60)
+              endTime.setSeconds(endTime.getSeconds() + timeout)
 
               await actions.updateRoom({
-                playerId: state.playerId,
-                roomId: state.room.roomId,
                 name: state.room.players[state.playerId].name,
                 salladBowl: state.room.salladBowl,
-                endTime
+                endTime,
+                gameState: state.room.gameState
               })
             }
           }, 'Start your turn')
