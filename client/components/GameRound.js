@@ -9,6 +9,15 @@ const teamScore = (players, team) => Object.keys(players).reduce((acc, playerId)
   return acc
 }, 0)
 
+const formatTimeRemaining = (timeRemaining) => {
+  const minutes = Math.floor(timeRemaining / 60)
+  let seconds = timeRemaining - minutes * 60
+  if (seconds < 10) {
+    seconds = '0' + seconds
+  }
+  return `${minutes}:${seconds}`
+}
+
 export default (state, actions) => {
   return h('div', {
     class: 'game',
@@ -41,7 +50,7 @@ export default (state, actions) => {
           oncreate: () => {
             console.log('oncreate')
           }
-        }, `started ${state.timeRemaining}`)
+        }, `${formatTimeRemaining(state.timeRemaining)}`)
         : ''
       : h('span', {}, '01:00'),
     !state.room.endTime

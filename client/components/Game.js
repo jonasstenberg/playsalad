@@ -3,7 +3,7 @@ import { h } from 'hyperapp'
 import GameIntro from './GameIntro'
 import GameRound from './GameRound'
 import TimesUp from './TimesUp'
-import Done from './Done'
+import EmptyBowl from './EmptyBowl'
 
 export default (state, actions) => {
   if (!state.room || !state.room.players) {
@@ -23,7 +23,7 @@ export default (state, actions) => {
       case 'timeout':
         return TimesUp(state, actions)
       case 'done':
-        return Done(state, actions)
+        return EmptyBowl(state, actions)
       default:
         actions.location.go('/')
         break
