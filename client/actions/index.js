@@ -96,17 +96,13 @@ export default {
   timesUp: () => async (state) => {
     if (state.playerId === state.room.activePlayer) {
       console.log('calling times up')
-      const endTime = new Date()
-      endTime.setSeconds(endTime.getSeconds() + timeout)
-
       await fetch(`${backendBaseUrl}/timesUp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          roomId: state.room.roomId,
-          endTime
+          roomId: state.room.roomId
         })
       })
     }

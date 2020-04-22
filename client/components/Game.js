@@ -20,7 +20,7 @@ export default (state, actions) => {
         return GameIntro(state, actions)
       case 'round':
         return GameRound(state, actions)
-      case 'timeout':
+      case 'timesup':
         return TimesUp(state, actions)
       case 'done':
         return EmptyBowl(state, actions)

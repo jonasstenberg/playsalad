@@ -317,7 +317,7 @@ app.post('/api/correctGuess', (req, res) => {
 })
 
 app.post('/api/timesUp', (req, res) => {
-  const { roomId, endTime } = req.body
+  const { roomId } = req.body
 
   try {
     const room = state.rooms.find(r => r.roomId === roomId)
@@ -334,9 +334,10 @@ app.post('/api/timesUp', (req, res) => {
     room.playersPlayed.push(room.activePlayer)
 
     room.activeTeam = room.players[room.activePlayer].team
-    room.endTime = endTime
+    room.endTime = null
+    room.gameState = 'timesup'
 
-    broadcast(room, 'startTurn')
+    broadcast(room, 'timesup')
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {

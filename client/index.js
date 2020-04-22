@@ -54,22 +54,24 @@ connection.onmessage = (e) => {
         actions.location.go('/game')
         break
       case 'startTurn':
-        calculateRemainingTime(message.endTime, (distance) => {
-          wiredActions.setTimeRemaining(distance)
-        })
         clearInterval(timerId)
         timerId = setInterval(() => calculateRemainingTime(message.endTime, (distance) => {
-          console.log(`distance: ${distance} ${timerId}`)
+          wiredActions.setTimeRemaining(distance)
+
           if (distance < 0) {
             clearInterval(timerId)
             wiredActions.timesUp()
-            setTimeout(() => {
-              wiredActions.setGameState('round')
-            }, 3000)
             return
           }
           wiredActions.setTimeRemaining(distance)
         }), 1000)
+        break
+      case 'timesup':
+        clearInterval(timerId)
+        setTimeout(() => {
+          console.log('setting round')
+          wiredActions.setGameState('round')
+        }, 3000)
         break
       case 'done':
         clearInterval(timerId)
