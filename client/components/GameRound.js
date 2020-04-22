@@ -30,7 +30,7 @@ export default (state, actions) => {
     h('span', {}, `Team fire: ${teamScore(state.room.players, 'fire')}`),
     h('span', {}, `Team ice: ${teamScore(state.room.players, 'ice')}`),
     state.room.endTime
-      ? h('span', { class: `active--word ${state.playerId !== state.room.activePlayer ? ' blurred' : ''}` }, state.room.activeWord)
+      ? h('span', { class: `game__word ${state.playerId !== state.room.activePlayer ? ' game__word--blurred' : ''}` }, state.room.activeWord)
       : '',
     state.playerId === state.room.activePlayer && state.room.endTime
       ? h('button', {

@@ -38,3 +38,8 @@
   margin-top: 1rem;
   font-size: 0.875rem;
 }
+
+.game__word--blurred {
+  color: transparent;
+  text-shadow: 0 0 0.875rem rgba(0, 0, 0, 1);
+}
