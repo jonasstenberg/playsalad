@@ -1,7 +1,7 @@
 import { location } from '@hyperapp/router'
 import fetch from '../utils/pseudo-fetch'
 
-import { backendBaseUrl, timeout } from '../config'
+import { backendBaseUrl } from '../config'
 
 export default {
   location: location.actions,
@@ -15,6 +15,8 @@ export default {
   setErrorText: errorText => ({ errorText }),
 
   setRoom: room => ({ room }),
+
+  setRandomNames: randomNames => ({ randomNames }),
 
   setGameState: (gameState) => (state) => {
     console.log(gameState)

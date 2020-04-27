@@ -24,7 +24,7 @@ export default (state, actions) => h('div', { class: 'choose-name flex' },
       class: 'button button--orange',
       onclick: async () => {
         await actions.updateRoom({
-          name: state.playerName,
+          name: state.playerName
         })
 
         actions.location.go('/lobby/player-list/')
