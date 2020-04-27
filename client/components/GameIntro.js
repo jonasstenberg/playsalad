@@ -10,7 +10,7 @@ export default (state, actions) => h('div', {
   h('h3', { class: 'game-intro__name' }, state.games[state.room.activeRound].name),
   state.games[state.room.activeRound].description.map(description =>
     h('div', { class: 'game-intro__description' }, [
-      h('img', { src: '/images/checkbox.svg' }),
+      h('img', { src: '/images/checkmark.svg' }),
       h('p', { class: 'game-intro__description-paragraph' }, description)
     ])
   ),
