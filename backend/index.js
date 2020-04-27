@@ -272,6 +272,7 @@ app.post('/api/startGame', (req, res) => {
     room.playersPlayed = [room.activePlayer]
     room.activeTeam = room.players[room.activePlayer].team
     room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
+    room.skips = state.skipsPerTurn
 
     broadcast(room, 'startGame')
 
@@ -283,12 +284,14 @@ app.post('/api/startGame', (req, res) => {
 })
 
 app.post('/api/correctGuess', (req, res) => {
-  const { playerId, roomId } = req.body
+  const { playerId, roomId, skip } = req.body
 
   try {
     const room = state.rooms.find(r => r.roomId === roomId)
 
-    room.players[playerId].score += 1
+    if (!skip) {
+      room.players[playerId].score += 1
+    }
 
     if (!room.salladBowl.length) {
       if (room.activeRound === 3) {
@@ -304,6 +307,7 @@ app.post('/api/correctGuess', (req, res) => {
         }, [])
         room.activeRound += 1
         room.gameState = 'done'
+        room.skips = state.skipsPerTurn
 
         room.activePlayer = Object.keys(room.players)[Math.floor(Math.random() * Object.keys(room.players).length)]
         room.playersPlayed = [room.activePlayer]
@@ -316,7 +320,12 @@ app.post('/api/correctGuess', (req, res) => {
     } else {
       room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
 
-      broadcast(room, 'correctGuess')
+      if (!skip) {
+        broadcast(room, 'correctGuess')
+      } else {
+        room.skips -= 1
+        broadcast(room, 'skip')
+      }
     }
 
     res.sendStatus(HttpStatus.NO_CONTENT)
@@ -346,6 +355,7 @@ app.post('/api/timesUp', (req, res) => {
     room.activeTeam = room.players[room.activePlayer].team
     room.endTime = null
     room.gameState = 'timesup'
+    room.skips = state.skipsPerTurn
 
     broadcast(room, 'timesup')
 
@@ -369,6 +379,7 @@ app.post('/api/resetGame', (req, res) => {
     delete room.endTime
     delete room.gameState
     delete room.playersPlayed
+    delete room.skips
 
     Object.keys(room.players).forEach(pid => {
       room.players[pid] = {

@@ -82,7 +82,7 @@ export default {
 
   setTimeRemaining: timeRemaining => ({ timeRemaining }),
 
-  correctGuess: async ({ playerId, roomId }) => {
+  correctGuess: async ({ playerId, roomId, skip }) => {
     await fetch(`${backendBaseUrl}/correctGuess`, {
       method: 'POST',
       headers: {
@@ -90,7 +90,8 @@ export default {
       },
       body: JSON.stringify({
         playerId,
-        roomId
+        roomId,
+        skip
       })
     })
   },

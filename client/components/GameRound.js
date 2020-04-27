@@ -38,7 +38,8 @@ export default (state, actions) => {
         onclick: async () => {
           await actions.correctGuess({
             playerId: state.room.activePlayer,
-            roomId: state.room.roomId
+            roomId: state.room.roomId,
+            skip: false
           })
         }
       }, 'Correct!')
@@ -74,6 +75,19 @@ export default (state, actions) => {
           }, 'Start your turn')
         ]
         : h('span', {}, `${state.room.players[state.room.activePlayer].name} is up next`)
+      : '',
+    state.playerId === state.room.activePlayer
+      ? h('span', {
+        onclick: async () => {
+          if (state.room.skips > 0) {
+            await actions.correctGuess({
+              playerId: state.room.activePlayer,
+              roomId: state.room.roomId,
+              skip: true
+            })
+          }
+        }
+      }, `Skip ${state.room.skips}`)
       : ''
   ])
 }
