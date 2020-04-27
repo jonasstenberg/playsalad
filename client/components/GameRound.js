@@ -21,20 +21,41 @@ const formatTimeRemaining = (timeRemaining) => {
 
 export default (state, actions) => {
   return h('div', {
-    class: 'game',
+    class: 'game-round',
     oncreate: () => {
       console.log('gameround', state)
     }
   }, [
-    h('span', {}, `Round ${state.room.activeRound}`),
-    h('h4', {}, `Round ${state.games[state.room.activeRound].name}`),
-    h('span', {}, `Team fire: ${teamScore(state.room.players, 'fire')}`),
-    h('span', {}, `Team ice: ${teamScore(state.room.players, 'ice')}`),
+    h('div', { class: 'game-round__round caption' }, `Round ${state.room.activeRound}`),
+    h('h4', { class: 'game-round__heading' }, `Round ${state.games[state.room.activeRound].name}`),
+    h('div', { class: 'game-round__scores' }, [
+      h('div', { class: 'game-round__score-wrapper' }, [
+        h('div', { class: 'game-round__team--fire caption' }, [
+          h('img', {
+            src: '/images/fire.svg',
+            class: 'game-round__team-logo'
+          }),
+          'Team fire'
+        ]),
+        h('div', { class: 'game-round__score' }, teamScore(state.room.players, 'fire'))
+      ]),
+      h('div', { class: 'game-round__score-wrapper' }, [
+        h('div', { class: 'game-round__team--ice caption' }, [
+          h('img', {
+            src: '/images/ice.svg',
+            class: 'game-round__team-logo'
+          }),
+          'Team ice'
+        ]),
+        h('div', { class: 'game-round__score' }, teamScore(state.room.players, 'ice'))
+      ])
+    ]),
     state.room.endTime
-      ? h('span', { class: `game__word ${state.playerId !== state.room.activePlayer ? ' game__word--blurred' : ''}` }, state.room.activeWord)
+      ? h('span', { class: `game-round__word ${state.playerId !== state.room.activePlayer ? ' game-round__word--blurred' : ''}` }, state.room.activeWord)
       : '',
     state.playerId === state.room.activePlayer && state.room.endTime
       ? h('button', {
+        class: 'button button--orange',
         onclick: async () => {
           await actions.correctGuess({
             playerId: state.room.activePlayer,
@@ -44,17 +65,20 @@ export default (state, actions) => {
         }
       }, 'Correct!')
       : '',
-    h('span', {}, `${state.room.players[state.room.activePlayer].team}`),
-    h('span', {}, `${state.room.players[state.room.activePlayer].name}`),
+    h('img', {
+      src: `/images/${state.room.players[state.room.activePlayer].team}.svg`,
+      class: 'game-round__current-team-logo'
+    }),
+    h('div', { class: 'game-round__current-team-player' }, `${state.room.players[state.room.activePlayer].name}`),
     state.room.endTime
       ? state.timeRemaining >= 0
-        ? h('span', {
+        ? h('div', {
           oncreate: () => {
             console.log('oncreate')
           }
         }, `${formatTimeRemaining(state.timeRemaining)}`)
         : ''
-      : h('span', {}, '01:00'),
+      : h('div', { class: 'game-round__ready' }, 'Are you ready?'),
     !state.room.endTime
       ? state.playerId === state.room.activePlayer
         ? [
@@ -74,7 +98,7 @@ export default (state, actions) => {
             }
           }, 'Start your turn')
         ]
-        : h('span', {}, `${state.room.players[state.room.activePlayer].name} is up next`)
+        : h('div', {}, `${state.room.players[state.room.activePlayer].name} is up next`)
       : '',
     state.playerId === state.room.activePlayer
       ? h('span', {

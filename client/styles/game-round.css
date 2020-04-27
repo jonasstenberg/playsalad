@@ -1,0 +1,68 @@
+.game-intro {
+  max-width: 37.5rem;
+  height: 100%;
+  padding: 1.5rem;
+}
+
+.game-round__round {
+  margin-top: 1.5rem;
+  color: var(--color-turquoise);
+}
+
+.game-round__heading {
+  margin-top: 0.5rem;
+  font-weight: normal;
+}
+
+.game-round__scores {
+  display: flex;
+}
+
+.game-round__score-wrapper {
+  flex: 1 0 auto;
+}
+
+.game-round__score,
+.game-round__current-team-player {
+  font-family: 'Dosis', Verdana, sans-serif;
+  font-size: 4rem;
+  font-weight: 600;
+}
+
+.game-round__word {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.game-round__word--blurred {
+  filter: blur(2rem);
+}
+
+.game-round__team-logo {
+  width: 0.875rem;
+  height: auto;
+  margin-right: 0.5rem;
+}
+
+.game-round__team--ice,
+.game-round__current-team-player--ice {
+  padding-top: 0.354rem;
+  color: var(--color-blue);
+}
+
+.game-round__team--fire,
+.game-round__current-team-player--fire {
+  color: var(--color-orange);
+}
+
+.game-round__current-team-logo {
+  width: 2rem;
+  height: auto;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.game-round__current-team-player {
+  margin-bottom: 2rem;
+}

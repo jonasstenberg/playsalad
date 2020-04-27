@@ -1,45 +1,5 @@
 .game {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  margin-top: 4.6875rem;
-  margin-right: 1.5rem;
-  margin-left: 1.5rem;
-  text-align: left;
-}
-
-.game__heading {
-  margin-bottom: 0.5rem;
-  color: #9bc1bc;
-}
-
-.game__name {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-}
-
-.game__description {
-  display: flex;
-  font-size: 1rem;
-  line-height: 1.375rem;
-  color: #333;
-}
-
-.game__description > img {
-  margin-right: 0.5rem;
-}
-
-.game__remote-icon {
-  margin-top: 1rem;
-}
-
-.game__remote-text {
-  margin-top: 1rem;
-  font-size: 0.875rem;
-}
-
-.game__word--blurred {
-  color: transparent;
-  text-shadow: 0 0 0.875rem rgba(0, 0, 0, 1);
+  justify-content: center;
+  height: 100%;
 }

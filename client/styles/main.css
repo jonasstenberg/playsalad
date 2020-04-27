@@ -21,5 +21,7 @@
 @import "./throw-names.css";
 @import "./rules.css";
 @import "./game.css";
+@import "./game-intro.css";
+@import "./game-round.css";
 @import "./times-up.css";
 @import "./empty-bowl.css";
