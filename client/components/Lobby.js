@@ -9,6 +9,7 @@ export default (state, actions) => h('div', {
   class: 'lobby flex',
   oncreate: () => {
     if (!state.room || !state.room.roomId) {
+      console.log('redirecting')
       actions.location.go('/')
     }
   }

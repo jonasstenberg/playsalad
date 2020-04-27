@@ -159,7 +159,8 @@ app.post('/api/rooms', (req, res) => {
         [playerId]: {
           name: '',
           score: 0,
-          team: 'fire'
+          team: 'fire',
+          active: true
         }
       }
     }
@@ -183,6 +184,7 @@ app.post('/api/rooms/join', (req, res) => {
     }
 
     const room = state.rooms.find(r => r.roomId === roomId)
+
     if (!room) {
       console.log('no room found with that id')
       res.sendStatus(HttpStatus.NOT_FOUND)
@@ -194,6 +196,8 @@ app.post('/api/rooms/join', (req, res) => {
       score: 0,
       team: Object.keys(room.players).filter(p => room.players[p].team === 'fire').length > Object.keys(room.players).filter(p => room.players[p].team === 'ice').length ? 'ice' : 'fire'
     }
+
+    broadcast(room, 'joining')
 
     res.status(HttpStatus.OK).json(room)
   } catch (err) {
@@ -287,22 +291,28 @@ app.post('/api/correctGuess', (req, res) => {
     room.players[playerId].score += 1
 
     if (!room.salladBowl.length) {
-      room.salladBowl = Object.keys(room.players).reduce((acc, curr) => {
-        if (room.players && room.players[curr] && room.players[curr].notes) {
-          acc.push(...room.players[curr].notes)
-        }
-        return acc
-      }, [])
-      room.activeRound += 1
-      room.gameState = 'done'
+      if (room.activeRound === 3) {
+        room.gameState = 'gameover'
+        room.endTime = null
+        broadcast(room, 'gameover')
+      } else {
+        room.salladBowl = Object.keys(room.players).reduce((acc, curr) => {
+          if (room.players && room.players[curr] && room.players[curr].notes) {
+            acc.push(...room.players[curr].notes)
+          }
+          return acc
+        }, [])
+        room.activeRound += 1
+        room.gameState = 'done'
 
-      room.activePlayer = Object.keys(room.players)[Math.floor(Math.random() * Object.keys(room.players).length)]
-      room.playersPlayed = [room.activePlayer]
-      room.activeTeam = room.players[room.activePlayer].team
-      room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
-      room.endTime = null
+        room.activePlayer = Object.keys(room.players)[Math.floor(Math.random() * Object.keys(room.players).length)]
+        room.playersPlayed = [room.activePlayer]
+        room.activeTeam = room.players[room.activePlayer].team
+        room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
+        room.endTime = null
 
-      broadcast(room, 'done')
+        broadcast(room, 'done')
+      }
     } else {
       room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
 
@@ -338,6 +348,37 @@ app.post('/api/timesUp', (req, res) => {
     room.gameState = 'timesup'
 
     broadcast(room, 'timesup')
+
+    res.sendStatus(HttpStatus.NO_CONTENT)
+  } catch (err) {
+    console.log(err)
+    res.status(HttpStatus.NOT_FOUND).send(err)
+  }
+})
+
+app.post('/api/resetGame', (req, res) => {
+  const { roomId } = req.body
+
+  try {
+    const room = state.rooms.find(r => r.roomId === roomId)
+
+    delete room.activeRound
+    delete room.activeWord
+    delete room.activePlayer
+    delete room.activeTeam
+    delete room.endTime
+    delete room.gameState
+    delete room.playersPlayed
+
+    Object.keys(room.players).forEach(pid => {
+      room.players[pid] = {
+        name: room.players[pid].name,
+        score: 0,
+        team: room.players[pid].team
+      }
+    })
+
+    broadcast(room, 'resetGame')
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {

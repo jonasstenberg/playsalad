@@ -79,6 +79,13 @@ connection.onmessage = (e) => {
           wiredActions.setGameState('intro')
         }, 3000)
         break
+      case 'gameover':
+        clearInterval(timerId)
+        break
+      case 'resetGame':
+        console.log('reseting game')
+        actions.location.go('/lobby/player-list')
+        break
     }
   }
 }

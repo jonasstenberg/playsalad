@@ -2,6 +2,7 @@ import { h } from 'hyperapp'
 
 import GameIntro from './GameIntro'
 import GameRound from './GameRound'
+import GameOver from './GameOver'
 import TimesUp from './TimesUp'
 import EmptyBowl from './EmptyBowl'
 
@@ -24,6 +25,8 @@ export default (state, actions) => {
         return TimesUp(state, actions)
       case 'done':
         return EmptyBowl(state, actions)
+      case 'gameover':
+        return GameOver(state, actions)
       default:
         actions.location.go('/')
         break

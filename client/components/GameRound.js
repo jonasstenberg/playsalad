@@ -2,12 +2,13 @@ import { h } from 'hyperapp'
 
 import { timeout } from '../config'
 
-const teamScore = (players, team) => Object.keys(players).reduce((acc, playerId) => {
-  if (players[playerId].team === team) {
-    acc += players[playerId].score
-  }
-  return acc
-}, 0)
+const teamScore = (players, team) => Object.keys(players)
+  .reduce((acc, playerId) => {
+    if (players[playerId].team === team) {
+      acc += players[playerId].score
+    }
+    return acc
+  }, 0)
 
 const formatTimeRemaining = (timeRemaining) => {
   const minutes = Math.floor(timeRemaining / 60)

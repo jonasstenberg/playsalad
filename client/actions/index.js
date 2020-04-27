@@ -108,5 +108,18 @@ export default {
         })
       })
     }
+  },
+
+  resetGame: () => async (state) => {
+    await fetch(`${backendBaseUrl}/resetGame`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        playerId: state.playerId,
+        roomId: state.room.roomId
+      })
+    })
   }
 }
