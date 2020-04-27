@@ -1,5 +1,10 @@
 .game {
   display: flex;
-  justify-content: center;
+  flex-flow: column;
+  align-items: center;
   height: 100%;
+}
+
+.game > * {
+  width: 100%;
 }

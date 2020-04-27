@@ -22,6 +22,10 @@
   flex: 1 0 auto;
 }
 
+.game-round__player-wrapper {
+  text-align: center;
+}
+
 .game-round__score,
 .game-round__current-team-player {
   font-family: 'Dosis', Verdana, sans-serif;
@@ -29,14 +33,22 @@
   font-weight: 600;
 }
 
+.game-round__current-team-player--small {
+  font-size: 2rem;
+}
+
 .game-round__word {
-  margin-top: 0;
+  display: block;
+  margin-top: 2rem;
   margin-bottom: 1.5rem;
+  font-size: 2rem;
   text-align: left;
+  text-align: center;
+  user-select: none;
 }
 
 .game-round__word--blurred {
-  filter: blur(2rem);
+  filter: blur(14px);
 }
 
 .game-round__team-logo {
@@ -61,6 +73,10 @@
   height: auto;
   margin-top: 2rem;
   margin-bottom: 1rem;
+}
+
+.game-round__current-team-logo--small {
+  width: 1.5rem;
 }
 
 .game-round__current-team-player {

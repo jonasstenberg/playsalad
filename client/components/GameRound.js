@@ -28,28 +28,30 @@ export default (state, actions) => {
   }, [
     h('div', { class: 'game-round__round caption' }, `Round ${state.room.activeRound}`),
     h('h4', { class: 'game-round__heading' }, `Round ${state.games[state.room.activeRound].name}`),
-    h('div', { class: 'game-round__scores' }, [
-      h('div', { class: 'game-round__score-wrapper' }, [
-        h('div', { class: 'game-round__team--fire caption' }, [
-          h('img', {
-            src: '/images/fire.svg',
-            class: 'game-round__team-logo'
-          }),
-          'Team fire'
+    !state.room.endTime
+      ? h('div', { class: 'game-round__scores' }, [
+        h('div', { class: 'game-round__score-wrapper' }, [
+          h('div', { class: 'game-round__team--fire caption' }, [
+            h('img', {
+              src: '/images/fire.svg',
+              class: 'game-round__team-logo'
+            }),
+            'Team fire'
+          ]),
+          h('div', { class: 'game-round__score' }, teamScore(state.room.players, 'fire'))
         ]),
-        h('div', { class: 'game-round__score' }, teamScore(state.room.players, 'fire'))
-      ]),
-      h('div', { class: 'game-round__score-wrapper' }, [
-        h('div', { class: 'game-round__team--ice caption' }, [
-          h('img', {
-            src: '/images/ice.svg',
-            class: 'game-round__team-logo'
-          }),
-          'Team ice'
-        ]),
-        h('div', { class: 'game-round__score' }, teamScore(state.room.players, 'ice'))
+        h('div', { class: 'game-round__score-wrapper' }, [
+          h('div', { class: 'game-round__team--ice caption' }, [
+            h('img', {
+              src: '/images/ice.svg',
+              class: 'game-round__team-logo'
+            }),
+            'Team ice'
+          ]),
+          h('div', { class: 'game-round__score' }, teamScore(state.room.players, 'ice'))
+        ])
       ])
-    ]),
+      : '',
     state.room.endTime
       ? h('span', { class: `game-round__word ${state.playerId !== state.room.activePlayer ? ' game-round__word--blurred' : ''}` }, state.room.activeWord)
       : '',
@@ -65,11 +67,13 @@ export default (state, actions) => {
         }
       }, 'Correct!')
       : '',
-    h('img', {
-      src: `/images/${state.room.players[state.room.activePlayer].team}.svg`,
-      class: 'game-round__current-team-logo'
-    }),
-    h('div', { class: 'game-round__current-team-player' }, `${state.room.players[state.room.activePlayer].name}`),
+    h('div', { class: 'game-round__player-wrapper' }, [
+      h('img', {
+        src: `/images/${state.room.players[state.room.activePlayer].team}.svg`,
+        class: `game-round__current-team-logo ${state.room.endTime ? 'game-round__current-team-logo--small' : ''}`
+      }),
+      h('div', { class: `game-round__current-team-player game-round__current-team-player--${state.room.players[state.room.activePlayer].team} ${state.room.endTime ? 'game-round__current-team-player--small' : ''}` }, `${state.room.players[state.room.activePlayer].name}`)
+    ]),
     state.room.endTime
       ? state.timeRemaining >= 0
         ? h('div', {
@@ -78,10 +82,11 @@ export default (state, actions) => {
           }
         }, `${formatTimeRemaining(state.timeRemaining)}`)
         : ''
-      : h('div', { class: 'game-round__ready' }, 'Are you ready?'),
+      : h('div', { class: 'game-round__zero' }, '00:00'),
     !state.room.endTime
       ? state.playerId === state.room.activePlayer
         ? [
+          h('div', { class: 'game-round__ready' }, 'Are you ready?'),
           h('button', {
             class: 'button button--orange',
             onclick: async () => {
@@ -99,19 +104,18 @@ export default (state, actions) => {
           }, 'Start your turn')
         ]
         : h('div', {}, `${state.room.players[state.room.activePlayer].name} is up next`)
-      : '',
-    state.playerId === state.room.activePlayer
-      ? h('span', {
-        onclick: async () => {
-          if (state.room.skips > 0) {
-            await actions.correctGuess({
-              playerId: state.room.activePlayer,
-              roomId: state.room.roomId,
-              skip: true
-            })
+      : state.playerId === state.room.activePlayer
+        ? h('span', {
+          onclick: async () => {
+            if (state.room.skips > 0) {
+              await actions.correctGuess({
+                playerId: state.room.activePlayer,
+                roomId: state.room.roomId,
+                skip: true
+              })
+            }
           }
-        }
-      }, `Skip ${state.room.skips}`)
-      : ''
+        }, `Skip ${state.room.skips}`)
+        : ''
   ])
 }
