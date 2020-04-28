@@ -119,7 +119,9 @@ wsc.onmessage = (e) => {
       case 'done':
         clearInterval(timerId)
         setTimeout(() => {
-          wiredActions.setGameState('intro')
+          wiredActions.updateRoom({
+            gameState: 'intro'
+          })
         }, 3000)
         break
       case 'gameover':
