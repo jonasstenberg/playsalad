@@ -134,6 +134,12 @@ setInterval(() => {
   })
 }, 5000)
 
+app.get('/api/rooms', (req, res) => {
+  res.status(HttpStatus.OK).json({
+    numberOfRooms: state.rooms.length
+  })
+})
+
 app.post('/api/rooms', (req, res) => {
   const { playerId } = req.body
 
