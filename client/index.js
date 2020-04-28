@@ -71,18 +71,20 @@ wsc.onmessage = (e) => {
     wiredActions.setRoom(message)
     switch (message.action) {
       case 'rejoin':
-        if (message.gameState && message.endTime) {
+        if (message.gameState) {
           clearInterval(timerId)
-          timerId = setInterval(() => calculateRemainingTime(message.endTime, (distance) => {
-            wiredActions.setTimeRemaining(distance)
+          if (message.endTime) {
+            timerId = setInterval(() => calculateRemainingTime(message.endTime, (distance) => {
+              wiredActions.setTimeRemaining(distance)
 
-            if (distance < 0) {
-              clearInterval(timerId)
-              wiredActions.timesUp()
-              return
-            }
-            wiredActions.setTimeRemaining(distance)
-          }), 1000)
+              if (distance < 0) {
+                clearInterval(timerId)
+                wiredActions.timesUp()
+                return
+              }
+              wiredActions.setTimeRemaining(distance)
+            }), 1000)
+          }
 
           actions.location.go('/game')
         } else {
