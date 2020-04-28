@@ -111,7 +111,9 @@ wsc.onmessage = (e) => {
         clearInterval(timerId)
         setTimeout(() => {
           console.log('setting round')
-          wiredActions.setGameState('round')
+          wiredActions.updateRoom({
+            gameState: 'round'
+          })
         }, 3000)
         break
       case 'done':
