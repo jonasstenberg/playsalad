@@ -67,7 +67,7 @@ wss.on('connection', function connection (ws, req) {
 
       broadcast(room, 'rejoin')
     } else {
-      console.log('No room found for deleted player, reconnecting')
+      console.log('No room found for deleted player, reconnecting', deletedPlayer.roomId)
 
       ws.send(JSON.stringify({
         playerId: ws.uuid
@@ -94,12 +94,16 @@ wss.on('connection', function connection (ws, req) {
 
       state.rooms = state.rooms.map(room => {
         if (room.players[ws.uuid]) {
+          state.deletedRoomPlayers = state.deletedRoomPlayers.filter(p => p.playerId !== ws.uuid)
+
+          console.log('Pushing to deletedRoomPlayers')
           state.deletedRoomPlayers.push({
             playerId: ws.uuid,
             roomId: room.roomId,
             deletedAt: new Date(),
             ...room.players[ws.uuid]
           })
+
           delete room.players[ws.uuid]
         }
 

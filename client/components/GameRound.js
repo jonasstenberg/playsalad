@@ -11,7 +11,6 @@ const teamScore = (players, team) => Object.keys(players)
   }, 0)
 
 const formatTimeRemaining = (timeRemaining) => {
-  console.log(timeRemaining)
   const minutes = Math.floor(timeRemaining / 60)
   let seconds = timeRemaining - minutes * 60
   if (seconds < 10) {
