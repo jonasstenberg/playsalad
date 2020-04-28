@@ -1,7 +1,8 @@
-/* global WebSocket */
+/* global sessionStorage */
 
 import { app } from 'hyperapp'
 import { location } from '@hyperapp/router'
+import { v4 as uuidv4 } from 'uuid'
 
 import state from './state'
 import actions from './actions'
@@ -9,10 +10,9 @@ import { websocketUrl } from './config'
 
 import App from './components/App'
 
-require('@babel/polyfill')
+import wsc from './utils/ws'
 
-const connection = new WebSocket(websocketUrl)
-state.wsConnection = connection
+require('@babel/polyfill')
 
 const wiredActions = app(
   state,
@@ -20,6 +20,26 @@ const wiredActions = app(
   App,
   document.getElementById('app')
 )
+
+let uid
+if (sessionStorage.getItem('wsToken')) {
+  uid = sessionStorage.getItem('wsToken')
+  console.log(uid)
+  wiredActions.setPlayerId(uid)
+} else {
+  uid = uuidv4()
+}
+
+wsc.open(`${websocketUrl}?token=${uid}`)
+wsc.onopen = (e) => {
+  console.log('WebSocketClient connected:', e)
+}
+
+wsc.onclose = (e) => {
+  console.log('WebSocketClient closed:', e)
+}
+
+sessionStorage.setItem('wsToken', uid)
 
 location.subscribe(wiredActions.location)
 
@@ -36,7 +56,7 @@ const calculateRemainingTime = (endTime, callback) => {
 
 let timerId
 
-connection.onmessage = (e) => {
+wsc.onmessage = (e) => {
   const message = JSON.parse(e.data)
   if (message.playerId) {
     wiredActions.setPlayerId(message.playerId)
@@ -50,6 +70,25 @@ connection.onmessage = (e) => {
     console.log(message)
     wiredActions.setRoom(message)
     switch (message.action) {
+      case 'rejoin':
+        if (message.gameState && message.endTime) {
+          clearInterval(timerId)
+          timerId = setInterval(() => calculateRemainingTime(message.endTime, (distance) => {
+            wiredActions.setTimeRemaining(distance)
+
+            if (distance < 0) {
+              clearInterval(timerId)
+              wiredActions.timesUp()
+              return
+            }
+            wiredActions.setTimeRemaining(distance)
+          }), 1000)
+
+          actions.location.go('/game')
+        } else {
+          actions.location.go('/lobby/player-list')
+        }
+        break
       case 'startGame':
         actions.location.go('/game')
         break
@@ -90,6 +129,6 @@ connection.onmessage = (e) => {
   }
 }
 
-connection.onerror = (error) => {
+wsc.onerror = (error) => {
   console.log(`WebSocket error: ${error}`)
 }

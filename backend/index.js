@@ -34,60 +34,50 @@ const broadcast = (room, action) => {
 }
 
 wss.on('connection', function connection (ws, req) {
+  ws.uuid = req.url.replace('/?token=', '').split('=')[1]
   ws.isAlive = true
 
-  const playerId = req.headers['sec-websocket-key']
+  state.players[ws.uuid] = ws
+  console.log('New user connected:', ws.uuid)
 
-  state.players[playerId] = ws
+  state.deletedRoomPlayers = state.deletedRoomPlayers.filter(p => {
+    const endDate = new Date()
+    endDate.setHours(endDate.getHours() + 1)
 
-  console.log('New user connected:', playerId)
+    return endDate > p.deletedAt
+  })
 
-  ws.send(JSON.stringify({
-    playerId
-  }))
+  const deletedPlayer = state.deletedRoomPlayers.find(d => d.playerId === ws.uuid)
 
-  // let room = state.rooms.find(r => r.roomId === 'ABCD')
-  //
-  // if (!room) {
-  //   room = {
-  //     roomId: 'ABCD',
-  //     ownerId: playerId,
-  //     players: {
-  //       [playerId]: {
-  //         name: 'Arne',
-  //         score: 0,
-  //         team: 'fire',
-  //         notes: [
-  //           'asdf',
-  //           'fdsa',
-  //           'gqreg',
-  //           'hyterh',
-  //           'ewrtwer'
-  //         ]
-  //       }
-  //     }
-  //   }
-  //   state.rooms.push(room)
-  // } else {
-  //   room.players[playerId] = {
-  //     name: `Weise ${playerId}`,
-  //     score: 0,
-  //     team: Object.keys(room.players).filter(p => room.players[p].team === 'fire').length > Object.keys(room.players).filter(p => room.players[p].team === 'ice').length ? 'ice' : 'fire',
-  //     notes: [
-  //       'asdf',
-  //       'fdsa',
-  //       'gqreg',
-  //       'hyterh',
-  //       'ewrtwer'
-  //     ]
-  //   }
-  //
-  //   broadcast(room, 'init')
-  // }
+  if (deletedPlayer) {
+    const deletedPlayerId = deletedPlayer.playerId
+    const room = state.rooms.find(r => r.roomId === deletedPlayer.roomId)
 
-  ws.send(JSON.stringify({
-    playerId
-  }))
+    console.log('Restoring deleted player')
+
+    if (room) {
+      delete deletedPlayer.playerId
+      delete deletedPlayer.roomId
+      delete deletedPlayer.deletedAt
+
+      room.players[deletedPlayerId] = deletedPlayer
+      room.action = 'rejoin'
+
+      console.log('Rejoining room', room.roomId)
+
+      broadcast(room, 'rejoin')
+    } else {
+      console.log('No room found for deleted player, reconnecting')
+
+      ws.send(JSON.stringify({
+        playerId: ws.uuid
+      }))
+    }
+  } else {
+    ws.send(JSON.stringify({
+      playerId: ws.uuid
+    }))
+  }
 
   ws.on('pong', () => {
     ws.isAlive = true
@@ -99,18 +89,18 @@ wss.on('connection', function connection (ws, req) {
   })
 
   ws.on('close', function () {
-    if (state.players[playerId]) {
-      delete state.players[playerId]
-      // TODO remove this when done
-      // const room = state.rooms.find(r => r.roomId === 'ABCD')
-      // if (room && room.players && Object.keys(room.players).length >= 4) {
-      //   state.rooms = []
-      // } else {
-      //   broadcast(room, 'removePlayer')
-      // }
+    if (state.players[ws.uuid]) {
+      delete state.players[ws.uuid]
+
       state.rooms = state.rooms.map(room => {
-        if (room.players[playerId]) {
-          delete room.players[playerId]
+        if (room.players[ws.uuid]) {
+          state.deletedRoomPlayers.push({
+            playerId: ws.uuid,
+            roomId: room.roomId,
+            deletedAt: new Date(),
+            ...room.players[ws.uuid]
+          })
+          delete room.players[ws.uuid]
         }
 
         Object.keys(room.players).forEach(p => {
@@ -121,7 +111,7 @@ wss.on('connection', function connection (ws, req) {
 
         return room
       }).filter(room => Object.keys(room.players).length)
-      console.log(`Deleted user: ${playerId}`)
+      console.log(`Deleted user: ${ws.uuid}`)
     }
   })
 })
@@ -159,8 +149,7 @@ app.post('/api/rooms', (req, res) => {
         [playerId]: {
           name: '',
           score: 0,
-          team: 'fire',
-          active: true
+          team: 'fire'
         }
       }
     }

@@ -1,5 +1,6 @@
 module.exports = {
   players: {},
   rooms: [],
-  skipsPerTurn: 1
+  skipsPerTurn: 1,
+  deletedRoomPlayers: []
 }
