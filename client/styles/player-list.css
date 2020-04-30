@@ -50,3 +50,12 @@
 .player-list__player--current {
   font-weight: 600;
 }
+
+.player-list__player--host {
+  padding-bottom: 0.125rem;
+}
+
+.player-list__host-image {
+  height: 1.375rem;
+  margin-left: 0.5rem;
+}
