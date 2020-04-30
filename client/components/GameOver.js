@@ -55,10 +55,22 @@ export default (state, actions) => {
 
         return [
           h('h3', { class: 'game-over__subheading' }, 'Congratulations!'),
-          h('p', { class: 'game-over__winning-team' }, `Team ${teamScores.winner.team}`),
+          h('p', { class: `game-over__winning-team game-over__winning-team--${teamScores.winner.team.toLowerCase()}` }, [
+            h('img', {
+              src: `/images/${teamScores.winner.team.toLowerCase()}.svg`,
+              class: 'game-over__team-logo game-over__team-logo--winning'
+            }),
+            h('span', {}, `Team ${teamScores.winner.team}`)
+          ]),
           h('p', { class: 'game-over__winning-team-score' }, teamScores.winner.score),
-          h('p', { class: 'game-over__losing-team' }, `Team ${teamScores.loser.team}`),
-          h('p', { class: 'game-over__losing-team-score' }, teamScores.loser.score)
+          h('p', { class: 'game-over__losing-team' }, [
+            h('img', {
+              src: `/images/${teamScores.loser.team.toLowerCase()}-gray.svg`,
+              class: 'game-over__team-logo game-over__team-logo--losing'
+            }),
+            h('span', {}, `Team ${teamScores.loser.team}`)
+          ]),
+          h('p', { class: 'game-over__losing-team-score game-over__team-logo' }, teamScores.loser.score)
         ]
       })()
     ]),

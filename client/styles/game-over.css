@@ -1,0 +1,66 @@
+.game-intro {
+  max-width: 37.5rem;
+  height: 100%;
+  padding: 1.5rem;
+}
+
+.game-over__heading {
+  margin-bottom: 0.5rem;
+  color: var(--color-turquoise);
+}
+
+.game-over__subheading {
+  margin-top: 0.5rem;
+  margin-bottom: 3rem;
+}
+
+.game-over__winning-team,
+.game-over__losing-team {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-over__winning-team {
+  font-size: 2rem;
+}
+
+.game-over__winning-team-score,
+.game-over__losing-team-score {
+  font-family: 'Dosis', Verdana, sans-serif;
+  font-weight: 600;
+}
+
+.game-over__winning-team-score {
+  margin-bottom: 2rem;
+  font-size: 6rem;
+}
+
+.game-over__winning-team--fire {
+  color: var(--color-orange);
+}
+
+.game-over__winning-team--ice {
+  color: var(--color-blue);
+}
+
+.game-over__losing-team {
+  color: var(--color-mid-gray);
+}
+
+.game-over__losing-team-score {
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  color: var(--color-mid-gray);
+}
+
+.game-over__team-logo--winning {
+  width: 1.375rem;
+  margin-right: 1rem;
+}
+
+.game-over__team-logo--losing {
+  width: 0.875rem;
+  margin-right: 0.875rem;
+}

@@ -22,6 +22,10 @@
   flex: 1 0 auto;
 }
 
+.game-round__score-wrapper:first-child {
+  border-right: 1px solid var(--color-mid-gray);
+}
+
 .game-round__player-wrapper {
   text-align: center;
 }
@@ -72,7 +76,6 @@
   width: 2rem;
   height: auto;
   margin-top: 2rem;
-  margin-bottom: 1rem;
 }
 
 .game-round__current-team-logo--small {

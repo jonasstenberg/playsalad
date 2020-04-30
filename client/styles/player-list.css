@@ -38,6 +38,7 @@
 .player-list__player {
   display: flex;
   align-items: center;
+  padding: 0.25rem 0;
 }
 
 .player-list__player--check {

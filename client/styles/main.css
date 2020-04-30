@@ -8,6 +8,7 @@
   --color-blue: #5ca4a9;
   --color-off-white: #e6ebe0;
   --color-gray: #c1c1c1;
+  --color-mid-gray: #a0a0a0;
   --color-dark-gray: #333;
   --color-white: #fff;
 }
@@ -23,5 +24,6 @@
 @import "./game.css";
 @import "./game-intro.css";
 @import "./game-round.css";
+@import "./game-over.css";
 @import "./times-up.css";
 @import "./empty-bowl.css";
