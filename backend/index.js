@@ -592,7 +592,7 @@ app.post('/api/resetGame', async (req, res) => {
       room_id = ?
     `, [roomId])
 
-    await db.run('UPDATE players SET score = 0 WHERE room_id = ?', [roomId])
+    await db.run('UPDATE players SET score = 0, notes = null WHERE room_id = ?', [roomId])
 
     const r = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
     const p = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
