@@ -24,8 +24,7 @@ const wiredActions = app(
 let uid
 if (sessionStorage.getItem('wsToken')) {
   uid = sessionStorage.getItem('wsToken')
-  console.log(uid)
-  wiredActions.setPlayerId(uid)
+  wiredActions.setClientId(uid)
 } else {
   uid = uuidv4()
 }
@@ -58,80 +57,82 @@ let timerId
 
 wsc.onmessage = (e) => {
   const message = JSON.parse(e.data)
-  if (message.playerId) {
-    wiredActions.setPlayerId(message.playerId)
-    if (message.room) {
-      wiredActions.setRoom(message.room)
-      console.log(message.room)
-      actions.location.go('/lobby/player-list')
-    }
-  } else {
+
+  if (message.room) {
     console.log('updating room')
-    console.log(message)
-    wiredActions.setRoom(message)
-    switch (message.action) {
-      case 'rejoin':
-        if (message.gameState) {
-          clearInterval(timerId)
-          if (message.endTime) {
-            timerId = setInterval(() => calculateRemainingTime(message.endTime, (distance) => {
-              wiredActions.setTimeRemaining(distance)
+    console.log(message.room)
+    wiredActions.setRoom(message.room)
+  }
+  if (message.players) {
+    console.log('updating player')
+    console.log(message.players)
+    wiredActions.setPlayers(message.players)
+  }
+  switch (message.action) {
+    case 'user':
+      wiredActions.setClientId(message.clientId)
+      break
+    case 'rejoin':
+      if (message.room.gameState) {
+        clearInterval(timerId)
+        if (message.room.endTime) {
+          timerId = setInterval(() => calculateRemainingTime(message.room.endTime, (distance) => {
+            wiredActions.setTimeRemaining(distance)
 
-              if (distance < 0) {
-                clearInterval(timerId)
-                wiredActions.timesUp()
-                return
-              }
-              wiredActions.setTimeRemaining(distance)
-            }), 1000)
-          }
-
-          actions.location.go('/game')
-        } else {
-          actions.location.go('/lobby/player-list')
+            if (distance < 0) {
+              clearInterval(timerId)
+              wiredActions.timesUp()
+              return
+            }
+            wiredActions.setTimeRemaining(distance)
+          }), 1000)
         }
-        break
-      case 'startGame':
-        actions.location.go('/game')
-        break
-      case 'startTurn':
-        clearInterval(timerId)
-        timerId = setInterval(() => calculateRemainingTime(message.endTime, (distance) => {
-          wiredActions.setTimeRemaining(distance)
 
-          if (distance < 0) {
-            clearInterval(timerId)
-            wiredActions.timesUp()
-            return
-          }
-          wiredActions.setTimeRemaining(distance)
-        }), 1000)
-        break
-      case 'timesup':
-        clearInterval(timerId)
-        setTimeout(() => {
-          console.log('setting round')
-          wiredActions.updateRoom({
-            gameState: 'round'
-          })
-        }, 3000)
-        break
-      case 'done':
-        clearInterval(timerId)
-        setTimeout(() => {
-          wiredActions.updateRoom({
-            gameState: 'intro'
-          })
-        }, 3000)
-        break
-      case 'gameover':
-        clearInterval(timerId)
-        break
-      case 'resetGame':
-        console.log('reseting game')
+        actions.location.go('/game')
+      } else {
         actions.location.go('/lobby/player-list')
-        break
-    }
+      }
+      break
+    case 'startGame':
+      actions.location.go('/game')
+      break
+    case 'startTurn':
+      clearInterval(timerId)
+      timerId = setInterval(() => calculateRemainingTime(message.room.endTime, (distance) => {
+        wiredActions.setTimeRemaining(distance)
+
+        if (distance < 0) {
+          clearInterval(timerId)
+          wiredActions.timesUp()
+          return
+        }
+        wiredActions.setTimeRemaining(distance)
+      }), 1000)
+      break
+    case 'timesup':
+      clearInterval(timerId)
+      setTimeout(() => {
+        console.log('setting round')
+        wiredActions.updateRoom({
+          gameState: 'round'
+        })
+      }, 3000)
+      break
+    case 'done':
+      clearInterval(timerId)
+      setTimeout(() => {
+        wiredActions.updateRoom({
+          gameState: 'intro'
+        })
+      }, 3000)
+      break
+    case 'gameover':
+      clearInterval(timerId)
+      break
+    case 'resetGame':
+      console.log('reseting game')
+      actions.location.go('/lobby/player-list')
+      break
   }
 }
 

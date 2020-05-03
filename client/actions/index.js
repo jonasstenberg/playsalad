@@ -10,11 +10,24 @@ export default {
 
   setPlayerName: playerName => ({ playerName }),
 
-  setPlayerId: playerId => ({ playerId }),
+  setClientId: clientId => ({ clientId }),
 
   setErrorText: errorText => ({ errorText }),
 
   setRoom: room => ({ room }),
+
+  setPlayers: players => (state, actions) => {
+    const player = players.find(player => player.clientId === state.clientId)
+    if (player) {
+      actions.setPlayer(player)
+    }
+
+    return {
+      players
+    }
+  },
+
+  setPlayer: player => ({ player }),
 
   setRandomNames: randomNames => ({ randomNames }),
 
@@ -28,18 +41,19 @@ export default {
     }
   },
 
-  createRoom: (playerId) => async (_, actions) => {
+  createRoom: (clientId) => async (_, actions) => {
     const res = await fetch(`${backendBaseUrl}/rooms`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        playerId: playerId
+        clientId: clientId
       })
     })
     const json = await res.json()
-    actions.setRoom(json)
+    actions.setRoom(json.room)
+    actions.setPlayers(json.players)
   },
 
   joinRoom: async (room) => {
@@ -56,6 +70,20 @@ export default {
     }
   },
 
+  updatePlayer: (player) => async (state) => {
+    await fetch(`${backendBaseUrl}/players`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        clientId: state.clientId,
+        roomId: state.room.roomId,
+        ...player
+      })
+    })
+  },
+
   updateRoom: (room) => async (state) => {
     await fetch(`${backendBaseUrl}/rooms`, {
       method: 'PUT',
@@ -63,7 +91,7 @@ export default {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        playerId: state.playerId,
+        clientId: state.clientId,
         roomId: state.room.roomId,
         ...room
       })
@@ -82,14 +110,14 @@ export default {
 
   setTimeRemaining: timeRemaining => ({ timeRemaining }),
 
-  correctGuess: async ({ playerId, roomId, skip }) => {
+  correctGuess: async ({ clientId, roomId, skip }) => {
     await fetch(`${backendBaseUrl}/correctGuess`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        playerId,
+        clientId,
         roomId,
         skip
       })
@@ -97,7 +125,7 @@ export default {
   },
 
   timesUp: () => async (state) => {
-    if (state.playerId === state.room.activePlayer) {
+    if (state.clientId === state.room.activePlayer) {
       console.log('calling times up')
       await fetch(`${backendBaseUrl}/timesUp`, {
         method: 'POST',
@@ -118,7 +146,7 @@ export default {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        playerId: state.playerId,
+        clientId: state.clientId,
         roomId: state.room.roomId
       })
     })

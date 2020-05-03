@@ -18,7 +18,7 @@ export default (state, actions) => h('div', {
       oninput: evt => {
         if (evt.target.value.length <= 4) {
           actions.setRoom({
-            roomId: evt.target.value
+            roomId: evt.target.value.toUpperCase()
           })
         }
       }
@@ -29,15 +29,15 @@ export default (state, actions) => h('div', {
       onclick: async () => {
         try {
           await actions.joinRoom({
-            playerId: state.playerId,
+            clientId: state.clientId,
             roomId: state.room.roomId
           })
+
+          actions.location.go('/lobby/choose-name')
         } catch (err) {
           console.log('no room with that id')
           actions.setErrorText('No Game with that PIN')
         }
-
-        actions.location.go('/lobby/choose-name')
       }
     }, 'Enter')
   ]),
@@ -45,7 +45,7 @@ export default (state, actions) => h('div', {
     h('button', {
       class: 'button button--blue',
       onclick: async () => {
-        await actions.createRoom(state.playerId)
+        await actions.createRoom(state.clientId)
 
         actions.location.go('/lobby/choose-name')
       }

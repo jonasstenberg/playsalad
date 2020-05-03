@@ -7,7 +7,7 @@ import TimesUp from './TimesUp'
 import EmptyBowl from './EmptyBowl'
 
 export default (state, actions) => {
-  if (!state.room || !state.room.players) {
+  if (!state.room || !state.players) {
     actions.location.go('/')
   }
   return h('div', {

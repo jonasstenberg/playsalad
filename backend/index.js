@@ -6,6 +6,8 @@ const HttpStatus = require('http-status-codes')
 const morgan = require('morgan')
 const WebSocket = require('ws')
 
+const db = require('./utils/db')
+const { camelToSnakeCase } = require('./utils/converters')
 const app = express()
 
 const server = http.createServer(app)
@@ -20,12 +22,19 @@ app.use(morgan(logFormat))
 
 const state = require('./state')
 
-const broadcast = (room, action) => {
-  if (room && room.players) {
-    Object.keys(room.players).forEach(playerId => {
-      if (state.players && state.players[playerId]) {
-        state.players[playerId].send(JSON.stringify({
-          ...room,
+const broadcast = (room, players, action) => {
+  if (players) {
+    players.forEach(player => {
+      if (state.connectedClients && state.connectedClients[player.clientId]) {
+        if (typeof room.saladBowl !== 'object') {
+          room.saladBowl = JSON.parse(room.saladBowl)
+        }
+        if (typeof room.playersPlayed !== 'object') {
+          room.playersPlayed = JSON.parse(room.playersPlayed)
+        }
+        state.connectedClients[player.clientId].send(JSON.stringify({
+          room,
+          players,
           action
         }))
       }
@@ -33,49 +42,37 @@ const broadcast = (room, action) => {
   }
 }
 
-wss.on('connection', function connection (ws, req) {
+wss.on('connection', async function connection (ws, req) {
   ws.uuid = req.url.replace('/?token=', '').split('=')[1]
   ws.isAlive = true
 
-  state.players[ws.uuid] = ws
+  state.connectedClients[ws.uuid] = ws
+
   console.log('New user connected:', ws.uuid)
 
-  state.deletedRoomPlayers = state.deletedRoomPlayers.filter(p => {
-    const endDate = new Date()
-    endDate.setHours(endDate.getHours() + 1)
-
-    return endDate > p.deletedAt
-  })
-
-  const deletedPlayer = state.deletedRoomPlayers.find(d => d.playerId === ws.uuid)
+  const deletedPlayer = await db.get('SELECT * FROM players WHERE datetime(deleted_at) >= datetime("now", "-1 Hour") AND client_id = ?', [ws.uuid])
 
   if (deletedPlayer) {
-    const deletedPlayerId = deletedPlayer.playerId
-    const room = state.rooms.find(r => r.roomId === deletedPlayer.roomId)
-
     console.log('Restoring deleted player')
+    await db.run('UPDATE players SET deleted_at = null WHERE client_id = ?', [ws.uuid])
 
-    if (room) {
-      delete deletedPlayer.playerId
-      delete deletedPlayer.roomId
-      delete deletedPlayer.deletedAt
+    if (deletedPlayer.roomId) {
+      const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [deletedPlayer.roomId])
+      const players = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [deletedPlayer.roomId])
 
-      room.players[deletedPlayerId] = deletedPlayer
-      room.action = 'rejoin'
-
-      console.log('Rejoining room', room.roomId)
-
-      broadcast(room, 'rejoin')
-    } else {
-      console.log('No room found for deleted player, reconnecting', deletedPlayer.roomId)
-
-      ws.send(JSON.stringify({
-        playerId: ws.uuid
-      }))
+      if (room) {
+        broadcast(room, players, 'rejoin')
+      }
     }
+
+    ws.send(JSON.stringify({
+      clientId: ws.uuid,
+      action: 'user'
+    }))
   } else {
     ws.send(JSON.stringify({
-      playerId: ws.uuid
+      clientId: ws.uuid,
+      action: 'user'
     }))
   }
 
@@ -88,48 +85,66 @@ wss.on('connection', function connection (ws, req) {
     console.log('recieved data', data)
   })
 
-  ws.on('close', function () {
-    if (state.players[ws.uuid]) {
-      delete state.players[ws.uuid]
+  ws.on('close', async () => {
+    if (state.connectedClients[ws.uuid]) {
+      delete state.connectedClients[ws.uuid]
 
-      state.rooms = state.rooms.map(room => {
-        if (room.players[ws.uuid]) {
-          state.deletedRoomPlayers = state.deletedRoomPlayers.filter(p => p.playerId !== ws.uuid)
+      await db.run('UPDATE players SET deleted_at = datetime("now", "localtime") WHERE client_id = ?', [ws.uuid])
 
-          console.log('Pushing to deletedRoomPlayers')
-          state.deletedRoomPlayers.push({
-            playerId: ws.uuid,
-            roomId: room.roomId,
-            deletedAt: new Date(),
-            ...room.players[ws.uuid]
-          })
+      const room = await db.get(`
+        SELECT
+          r.room_id,
+          GROUP_CONCAT(p.client_id) as c
+        FROM
+          rooms r
+        LEFT JOIN
+          players p
+        ON
+          r.room_id = p.room_id
+        GROUP BY
+          r.room_id
+        HAVING
+          c LIKE ?
+        `, [`%${ws.uuid}%`])
 
-          delete room.players[ws.uuid]
+      if (room && room.c) {
+        const players = await db.all(`
+          SELECT
+            *
+          FROM
+            players
+          WHERE
+            client_id IN (${room.c.split(',').map(() => '?').join(',')})
+        `, room.c.split(','))
+
+        const deleteRoom = players.every(player => player.deletedAt)
+
+        if (deleteRoom) {
+          await db.run('DELETE FROM rooms WHERE room_id = ?', [room.roomId])
+          await db.run('DELETE FROM players WHERE room_id = ?', [room.roomId])
         }
 
-        Object.keys(room.players).forEach(p => {
-          if (state.players && state.players[p]) {
-            state.players[p].send(JSON.stringify(room))
-          }
-        })
+        const r = await db.get('SELECT * FROM rooms WHERE room_id = ?', [room.roomId])
+        const p = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [room.roomId])
 
-        return room
-      }).filter(room => Object.keys(room.players).length)
+        broadcast(r, p, 'disconnect')
+      }
+
       console.log(`Deleted user: ${ws.uuid}`)
     }
   })
 })
 
 setInterval(() => {
-  wss.clients.forEach((ws) => {
-    if (!ws.isAlive) {
+  Object.keys(state.connectedClients).forEach((id) => {
+    if (!state.connectedClients[id].isAlive) {
       console.log('terminated connection to client')
-      return ws.terminate()
+      return state.connectedClients[id].terminate()
     }
 
-    ws.isAlive = false
-    if (ws) {
-      ws.ping(null, false, true)
+    state.connectedClients[id].isAlive = false
+    if (state.connectedClients[id]) {
+      state.connectedClients[id].ping(null, false, true)
     }
   })
 }, 5000)
@@ -140,110 +155,206 @@ app.get('/api/rooms', (req, res) => {
   })
 })
 
-app.post('/api/rooms', (req, res) => {
-  const { playerId } = req.body
+app.post('/api/rooms', async (req, res) => {
+  const { clientId } = req.body
 
   try {
-    if (!playerId) {
+    if (!clientId) {
       res.sendStatus(HttpStatus.NOT_FOUND)
       return
     }
 
-    const r = Math.random().toString(36)
-    const roomId = r.substring(r.length - 4).replace(/0/g, 'o').toUpperCase()
+    const randomString = Math.random().toString(36)
+    const roomId = randomString.substring(randomString.length - 4).replace(/0/g, 'o').toUpperCase()
 
-    const room = {
-      roomId,
-      ownerId: playerId,
-      players: {
-        [playerId]: {
-          name: '',
-          score: 0,
-          team: 'fire'
-        }
-      }
+    let room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+
+    if (!room) {
+      await db.run('INSERT INTO rooms (room_id, owner_id) VALUES (?, ?)', [roomId, clientId])
     }
 
-    state.rooms.push(room)
-    res.status(HttpStatus.OK).json(room)
+    const playerParams = {
+      $clientId: clientId,
+      $roomId: roomId,
+      $score: 0,
+      $team: 'fire'
+    }
+
+    let player = await db.get('SELECT * FROM players WHERE client_id = ?', [clientId])
+
+    if (player) {
+      await db.run('UPDATE players SET room_id = $roomId, score = $score, team = $team, deleted_at = null WHERE client_id = $clientId', playerParams)
+    } else {
+      await db.run('INSERT INTO players (client_id, room_id, score, team) VALUES ($clientId, $roomId, $score, $team)', playerParams)
+    }
+
+    room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+    player = await db.get('SELECT * FROM players WHERE client_id = ?', [clientId])
+
+    res.status(HttpStatus.OK).json({
+      room,
+      players: [player]
+    })
   } catch (err) {
     console.log(err)
     res.status(HttpStatus.NOT_FOUND).send(err)
   }
 })
 
-app.post('/api/rooms/join', (req, res) => {
-  const { playerId, roomId } = req.body
+app.post('/api/rooms/join', async (req, res) => {
+  const { clientId, roomId } = req.body
 
   try {
-    if (!playerId) {
-      console.log('no player found with that id')
+    if (!clientId) {
       res.sendStatus(HttpStatus.NOT_FOUND)
       return
     }
 
-    const room = state.rooms.find(r => r.roomId === roomId)
+    const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
 
     if (!room) {
-      console.log('no room found with that id')
+      console.log('No room found with that id')
       res.sendStatus(HttpStatus.NOT_FOUND)
       return
     }
 
-    room.players[playerId] = {
-      name: '',
-      score: 0,
-      team: Object.keys(room.players).filter(p => room.players[p].team === 'fire').length > Object.keys(room.players).filter(p => room.players[p].team === 'ice').length ? 'ice' : 'fire'
+    const teamCount = await db.get(`
+      SELECT
+        SUM(CASE WHEN p.team = 'fire' THEN 1 ELSE 0 END) AS fire,
+        SUM(CASE WHEN p.team = 'ice' THEN 1 ELSE 0 END) AS ice
+      FROM
+        players p
+      WHERE
+        room_id = ?
+    `, [roomId])
+
+    const playerParams = {
+      $clientId: clientId,
+      $roomId: roomId,
+      $score: 0,
+      $team: teamCount.fire > teamCount.ice ? 'ice' : 'fire'
     }
 
-    broadcast(room, 'joining')
+    const player = await db.get('SELECT * FROM players WHERE client_id = ?', [clientId])
 
-    res.status(HttpStatus.OK).json(room)
+    if (player) {
+      await db.run('UPDATE players SET room_id = $roomId, score = $score, team = $team, deleted_at = null WHERE client_id = $clientId', playerParams)
+    } else {
+      await db.run('INSERT INTO players (client_id, room_id, score, team) VALUES ($clientId, $roomId, $score, $team)', playerParams)
+    }
+
+    const players = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
+
+    broadcast(room, players, 'joining')
+
+    res.sendStatus(HttpStatus.OK)
   } catch (err) {
     console.log(err)
     res.status(HttpStatus.NOT_FOUND).send(err)
   }
 })
 
-app.put('/api/rooms', (req, res) => {
-  const { playerId, name, notes, roomId, salladBowl, endTime, gameState } = req.body
+app.put('/api/rooms', async (req, res) => {
+  const { roomId, saladBowl, endTime, gameState } = req.body
 
   try {
-    const room = state.rooms.find(r => r.roomId === roomId)
+    const roomCheck = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
 
-    if (!room) {
-      console.log(`no room found with that id: ${roomId}`)
+    if (!roomCheck) {
+      console.log(`No room found with that id: ${roomId}`)
       res.sendStatus(HttpStatus.NOT_FOUND)
       return
     }
 
-    if (salladBowl) {
-      room.salladBowl = salladBowl
+    const params = {}
+
+    if (saladBowl) {
+      params.$saladBowl = JSON.stringify(saladBowl)
     }
 
     if (endTime) {
-      room.endTime = endTime
+      params.$endTime = endTime
     }
 
     if (gameState) {
-      room.gameState = gameState
+      params.$gameState = gameState
     }
 
+    if (!Object.keys(params).length) {
+      console.log('Nothing to update')
+      return
+    }
+
+    const sets = Object.keys(params).map(key => `${camelToSnakeCase(key.replace('$', ''))} = ${key}`)
+
+    params.$roomId = roomId
+
+    await db.run(`
+      UPDATE
+        rooms
+      SET
+        ${sets.join(', ')}
+      WHERE
+        room_id = $roomId
+    `, params)
+
+    const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+    const players = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
+
+    // TODO fix startTurn/updateRoom
+    broadcast(room, players, endTime ? 'startTurn' : 'updateRoom')
+
+    res.sendStatus(HttpStatus.NO_CONTENT)
+  } catch (err) {
+    console.log(err)
+    res.status(HttpStatus.NOT_FOUND).send(err)
+  }
+})
+
+app.put('/api/players', async (req, res) => {
+  const { clientId, roomId, name, notes } = req.body
+
+  try {
+    const player = await db.get('SELECT * FROM players WHERE client_id = ?', [clientId])
+
+    if (!player) {
+      console.log(`No player found with that id: ${clientId}`)
+      res.sendStatus(HttpStatus.NOT_FOUND)
+      return
+    }
+
+    const params = {}
+
     if (name) {
-      room.players[playerId] = {
-        ...room.players[playerId],
-        name
-      }
+      params.$name = name
     }
 
     if (notes) {
-      room.players[playerId] = {
-        ...room.players[playerId],
-        notes
-      }
+      params.$notes = JSON.stringify(notes)
     }
 
-    broadcast(room, endTime ? 'startTurn' : 'updateRoom')
+    if (!Object.keys(params).length) {
+      console.log('Nothing to update')
+      return
+    }
+
+    const sets = Object.keys(params).map(key => `${camelToSnakeCase(key.replace('$', ''))} = ${key}`)
+
+    params.$clientId = clientId
+
+    await db.run(`
+      UPDATE
+        players
+      SET
+        ${sets.join(', ')}
+      WHERE
+        client_id = $clientId
+    `, params)
+
+    const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+    const players = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
+
+    broadcast(room, players, 'updatePlayer')
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -252,28 +363,57 @@ app.put('/api/rooms', (req, res) => {
   }
 })
 
-app.post('/api/startGame', (req, res) => {
+app.post('/api/startGame', async (req, res) => {
   const { roomId } = req.body
 
   try {
-    const room = state.rooms.find(r => r.roomId === roomId)
+    const players = await db.all('SELECT * FROM players WHERE room_id = ?', [roomId])
 
-    room.salladBowl = Object.keys(room.players).reduce((acc, curr) => {
-      if (room.players && room.players[curr] && room.players[curr].notes) {
-        acc.push(...room.players[curr].notes)
+    const saladBowl = players.reduce((acc, player) => {
+      const notes = JSON.parse(player.notes)
+      if (notes) {
+        acc.push(...notes)
       }
       return acc
     }, [])
-    room.activeRound = 1
-    room.gameState = 'intro'
+    const gameState = 'intro'
 
-    room.activePlayer = Object.keys(room.players)[Math.floor(Math.random() * Object.keys(room.players).length)]
-    room.playersPlayed = [room.activePlayer]
-    room.activeTeam = room.players[room.activePlayer].team
-    room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
-    room.skips = state.skipsPerTurn
+    const randomPlayer = players[Math.floor(Math.random() * players.length)]
+    const activePlayer = randomPlayer.clientId
+    const playersPlayed = [randomPlayer.clientId]
+    const activeTeam = randomPlayer.team
+    const activeWord = saladBowl.splice(Math.floor(Math.random() * saladBowl.length), 1)[0]
+    const skips = state.skipsPerTurn
 
-    broadcast(room, 'startGame')
+    const params = {
+      $roomId: roomId,
+      $saladBowl: JSON.stringify(saladBowl),
+      $gameState: gameState,
+      $activePlayer: activePlayer,
+      $playersPlayed: JSON.stringify(playersPlayed),
+      $activeTeam: activeTeam,
+      $activeWord: activeWord,
+      $skips: skips
+    }
+
+    await db.run(`
+    UPDATE
+      rooms
+    SET
+      game_state = $gameState,
+      salad_bowl = $saladBowl,
+      active_player = $activePlayer,
+      active_team = $activeTeam,
+      active_word = $activeWord,
+      players_played = $playersPlayed,
+      skips = $skips
+    WHERE
+      room_id = $roomId
+    `, params)
+
+    const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+
+    broadcast(room, players, 'startGame')
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -282,50 +422,90 @@ app.post('/api/startGame', (req, res) => {
   }
 })
 
-app.post('/api/correctGuess', (req, res) => {
-  const { playerId, roomId, skip } = req.body
+app.post('/api/correctGuess', async (req, res) => {
+  const { clientId, roomId, skip } = req.body
 
   try {
-    const room = state.rooms.find(r => r.roomId === roomId)
+    const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+    const players = await db.all('SELECT * FROM players WHERE room_id = ?', [roomId])
 
     if (!skip) {
-      room.players[playerId].score += 1
+      await db.run('UPDATE players SET score = score + 1 WHERE client_id = ?', [clientId])
     }
 
-    if (!room.salladBowl.length) {
+    let saladBowl = JSON.parse(room.saladBowl)
+    let playersPlayed = JSON.parse(room.playersPlayed)
+    const params = {}
+
+    let broadcastAction
+
+    if (!saladBowl || !saladBowl.length) {
       if (room.activeRound === 3) {
-        room.gameState = 'gameover'
-        room.endTime = null
-        broadcast(room, 'gameover')
+        params.$gameState = 'gameover'
+        params.$endTime = null
+
+        broadcastAction = 'gameover'
       } else {
-        room.salladBowl = Object.keys(room.players).reduce((acc, curr) => {
-          if (room.players && room.players[curr] && room.players[curr].notes) {
-            acc.push(...room.players[curr].notes)
+        saladBowl = players.reduce((acc, player) => {
+          const notes = JSON.parse(player.notes)
+          if (notes) {
+            acc.push(...notes)
           }
           return acc
         }, [])
-        room.activeRound += 1
-        room.gameState = 'done'
-        room.skips = state.skipsPerTurn
+        params.$activeRound = room.activeRound + 1
+        params.$gameState = 'done'
+        // TODO replace with config
+        params.$skips = state.skipsPerTurn
 
-        room.activePlayer = Object.keys(room.players)[Math.floor(Math.random() * Object.keys(room.players).length)]
-        room.playersPlayed = [room.activePlayer]
-        room.activeTeam = room.players[room.activePlayer].team
-        room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
-        room.endTime = null
+        if (playersPlayed.length === players.length) {
+          playersPlayed = []
+        }
 
-        broadcast(room, 'done')
+        const filteredPlayers = players.filter(p => !playersPlayed.includes(p.clientId))
+        const randomPlayer = filteredPlayers[Math.floor(Math.random() * filteredPlayers.length)]
+        playersPlayed.push(randomPlayer.clientId)
+        const activeWord = saladBowl.splice(Math.floor(Math.random() * saladBowl.length), 1)[0]
+
+        params.$activePlayer = randomPlayer.clientId
+        params.$playersPlayed = JSON.stringify(playersPlayed)
+        params.$activeTeam = randomPlayer.team
+        params.$activeWord = activeWord
+        params.$saladBowl = JSON.stringify(saladBowl)
+        params.$endTime = null
+
+        broadcastAction = 'done'
       }
     } else {
-      room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
+      const activeWord = saladBowl.splice(Math.floor(Math.random() * saladBowl.length), 1)[0]
+      params.$activeWord = activeWord
+      params.$saladBowl = JSON.stringify(saladBowl)
 
       if (!skip) {
-        broadcast(room, 'correctGuess')
+        broadcastAction = 'correctGuess'
       } else {
-        room.skips -= 1
-        broadcast(room, 'skip')
+        params.$skips -= 1
+        broadcastAction = 'skip'
       }
     }
+
+    const sets = Object.keys(params).map(key => `${camelToSnakeCase(key.replace('$', ''))} = ${key}`)
+
+    params.$roomId = roomId
+
+    await db.run(`
+    UPDATE
+      rooms
+    SET
+      ${sets.join(', ')}
+    WHERE
+      room_id = $roomId
+    `, params)
+
+    const r = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+    const p = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
+
+    broadcast(r, p, broadcastAction)
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -334,29 +514,55 @@ app.post('/api/correctGuess', (req, res) => {
   }
 })
 
-app.post('/api/timesUp', (req, res) => {
+app.post('/api/timesUp', async (req, res) => {
   const { roomId } = req.body
 
   try {
-    const room = state.rooms.find(r => r.roomId === roomId)
+    const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+    const players = await db.all('SELECT * FROM players WHERE room_id = ?', [roomId])
 
-    room.activeWord = room.salladBowl.splice(Math.floor(Math.random() * room.salladBowl.length), 1)[0]
+    const saladBowl = JSON.parse(room.saladBowl)
+    let playersPlayed = JSON.parse(room.playersPlayed)
 
-    if (room.playersPlayed.length === Object.keys(room.players).length) {
-      room.playersPlayed = []
+    if (playersPlayed.length === players.length) {
+      playersPlayed = []
     }
 
-    const playerPool = Object.keys(room.players)
-      .filter(playerId => room.players[playerId].team !== room.activeTeam && !room.playersPlayed.includes(playerId))
-    room.activePlayer = playerPool[Math.floor(Math.random() * playerPool.length)]
-    room.playersPlayed.push(room.activePlayer)
+    const filteredPlayers = players.filter(p => !playersPlayed.includes(p.clientId))
+    const randomPlayer = filteredPlayers[Math.floor(Math.random() * filteredPlayers.length)]
 
-    room.activeTeam = room.players[room.activePlayer].team
-    room.endTime = null
-    room.gameState = 'timesup'
-    room.skips = state.skipsPerTurn
+    playersPlayed.push(randomPlayer.clientId)
 
-    broadcast(room, 'timesup')
+    const activeWord = saladBowl.splice(Math.floor(Math.random() * saladBowl.length), 1)[0]
+
+    const params = {
+      $activeWord: activeWord,
+      $saladBowl: JSON.stringify(saladBowl),
+      $activePlayer: randomPlayer.clientId,
+      $playersPlayed: JSON.stringify(playersPlayed),
+      $activeTeam: randomPlayer.team,
+      $endTime: null,
+      $gameState: 'timesup',
+      $skips: state.skipsPerTurn
+    }
+
+    const sets = Object.keys(params).map(key => `${camelToSnakeCase(key.replace('$', ''))} = ${key}`)
+
+    params.$roomId = roomId
+
+    await db.run(`
+    UPDATE
+      rooms
+    SET
+      ${sets.join(', ')}
+    WHERE
+      room_id = $roomId
+    `, params)
+
+    const r = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+    const p = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
+
+    broadcast(r, p, 'timesup')
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -365,30 +571,33 @@ app.post('/api/timesUp', (req, res) => {
   }
 })
 
-app.post('/api/resetGame', (req, res) => {
+app.post('/api/resetGame', async (req, res) => {
   const { roomId } = req.body
 
   try {
-    const room = state.rooms.find(r => r.roomId === roomId)
+    await db.run(`
+    UPDATE
+      rooms
+    SET
+      game_state = null,
+      salad_bowl = null,
+      active_player = null,
+      active_team = null,
+      active_word = null,
+      players_played = null,
+      end_time = null,
+      skips = 1,
+      active_round = 1
+    WHERE
+      room_id = ?
+    `, [roomId])
 
-    delete room.activeRound
-    delete room.activeWord
-    delete room.activePlayer
-    delete room.activeTeam
-    delete room.endTime
-    delete room.gameState
-    delete room.playersPlayed
-    delete room.skips
+    await db.run('UPDATE players SET score = 0 WHERE room_id = ?', [roomId])
 
-    Object.keys(room.players).forEach(pid => {
-      room.players[pid] = {
-        name: room.players[pid].name,
-        score: 0,
-        team: room.players[pid].team
-      }
-    })
+    const r = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+    const p = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
 
-    broadcast(room, 'resetGame')
+    broadcast(r, p, 'resetGame')
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -399,4 +608,9 @@ app.post('/api/resetGame', (req, res) => {
 
 server.listen(process.env.PORT || 8080, () => {
   console.log(`Server started on port ${server.address().port}`)
+})
+
+process.on('SIGINT', () => {
+  db.close()
+  server.close()
 })

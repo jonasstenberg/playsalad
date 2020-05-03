@@ -1,5 +1,5 @@
 module.exports = {
-  players: {},
+  connectedClients: {},
   rooms: [],
   skipsPerTurn: 1,
   deletedRoomPlayers: []

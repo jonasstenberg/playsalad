@@ -1,19 +1,19 @@
 import { h } from 'hyperapp'
 
-const calculateScore = (room) => {
-  if (!room) {
+const calculateScore = (players) => {
+  if (!players) {
     return null
   }
-  const teamScore = (players, team) => Object.keys(players)
-    .reduce((acc, playerId) => {
-      if (players[playerId].team === team) {
-        acc += players[playerId].score
+  const teamScore = (players, team) => players
+    .reduce((acc, player) => {
+      if (player.team === team) {
+        acc += player.score
       }
       return acc
     }, 0)
 
-  const teamFire = teamScore(room.players, 'fire')
-  const teamIce = teamScore(room.players, 'ice')
+  const teamFire = teamScore(players, 'fire')
+  const teamIce = teamScore(players, 'ice')
 
   if (teamFire === teamIce) {
     return {
@@ -39,7 +39,7 @@ const calculateScore = (room) => {
 }
 
 export default (state, actions) => {
-  const teamScores = calculateScore(state.room)
+  const teamScores = calculateScore(state.players)
 
   return h('div', { class: 'game-over flex' }, [
     h('div', { class: 'game-over__header' }, [
@@ -74,7 +74,7 @@ export default (state, actions) => {
         ]
       })()
     ]),
-    state.playerId === state.room.ownerId
+    state.clientId === state.room.ownerId
       ? h('button', {
         class: 'button button--orange',
         onclick: async () => {

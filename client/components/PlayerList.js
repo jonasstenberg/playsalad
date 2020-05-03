@@ -6,7 +6,7 @@ const startGameEnabled = (players) => {
   if (!players) {
     return false
   }
-  const allHasThrownNotes = Object.keys(players).every(playerId => players[playerId].notes && players[playerId].notes.length)
+  const allHasThrownNotes = players.every(player => player.notes && player.notes.length)
 
   return allHasThrownNotes && Object.keys(players).length > 3
 }
@@ -24,8 +24,8 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
         'Team fire'
       ]),
       h('ul', { class: 'player-list__players' }, [
-        state.room && state.room.players && Object.keys(state.room.players).length
-          ? Object.keys(state.room.players).filter(playerId => state.room.players[playerId].team === 'fire').map((playerId) => Player(state, playerId))
+        state.players && state.players.length
+          ? state.players.filter(player => player.team === 'fire').map((player) => Player(state, player))
           : null
       ])
     ]),
@@ -38,26 +38,25 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
         'Team ice'
       ]),
       h('ul', { class: 'player-list__players' }, [
-        state.room && state.room.players && Object.keys(state.room.players).length
-          ? Object.keys(state.room.players).filter(playerId => state.room.players[playerId].team === 'ice').map((playerId) => Player(state, playerId))
+        state.players && state.players.length
+          ? state.players.filter(player => player.team === 'ice').map((player) => Player(state, player))
           : null
       ])
     ])
   ]),
   h('div', { class: 'player-list__waiting caption' }, 'waiting for other players to join...'),
   h('button', {
-    class: `button button--blue ${state.room && state.room.players && state.room.players[state.playerId] && state.room.players[state.playerId].notes ? 'button--disabled' : ''}`,
-    disabled: state.room && state.room.players && state.room.players[state.playerId] && state.room.players[state.playerId].notes ? state.room.players[state.playerId].notes : false,
+    class: `button button--blue ${state.player && state.player.notes ? 'button--disabled' : ''}`,
+    disabled: state.player && state.player.notes ? state.player.notes : false,
     onclick: () => actions.location.go('/lobby/throw-names')
   }, 'Throw in names'),
-  state.playerId === state.room.ownerId
+  state.clientId === state.room.ownerId
     ? h('button', {
-      class: `button button--orange ${state.room && state.room.players && startGameEnabled(state.room.players) ? '' : 'button--disabled'}`,
-      disabled: state.room && state.room.players && !startGameEnabled(state.room.players),
-      oncreate: () => state.room && state.room.players ? console.log(Object.keys(state.room.players).length) : '',
+      class: `button button--orange ${state.players && startGameEnabled(state.players) ? '' : 'button--disabled'}`,
+      disabled: state.players && !startGameEnabled(state.players),
       onclick: () => {
         actions.startGame({
-          playerId: state.playerId,
+          clientId: state.clientId,
           roomId: state.room.roomId
         })
       }

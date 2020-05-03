@@ -30,7 +30,7 @@ export default (state, actions) => h('div', {
     path: '/lobby/throw-names',
     render: () => ThrowNames(state, actions)
   }),
-  state.room && state.room.players && state.room.players[state.playerId] && !state.room.players[state.playerId].notes
+  state.player && !state.player.notes
     ? h('span', {
       class: 'return',
       onclick: () => {
