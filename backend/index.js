@@ -517,6 +517,10 @@ app.post('/api/correctGuess', async (req, res) => {
         broadcastAction = 'done'
       }
     } else {
+      if (skip) {
+        saladBowl.push(room.activeWord)
+      }
+
       const activeWord = saladBowl.splice(Math.floor(Math.random() * saladBowl.length), 1)[0]
       params.$activeWord = activeWord
       params.$saladBowl = JSON.stringify(saladBowl)
@@ -524,7 +528,7 @@ app.post('/api/correctGuess', async (req, res) => {
       if (!skip) {
         broadcastAction = 'correctGuess'
       } else {
-        params.$skips -= 1
+        params.$skips = room.skips - 1
         broadcastAction = 'skip'
       }
     }
@@ -572,6 +576,7 @@ app.post('/api/timesUp', async (req, res) => {
     const randomPlayer = filteredPlayers[Math.floor(Math.random() * filteredPlayers.length)]
 
     playersPlayed.push(randomPlayer.clientId)
+    saladBowl.push(room.activeWord)
 
     const activeWord = saladBowl.splice(Math.floor(Math.random() * saladBowl.length), 1)[0]
 

@@ -6,10 +6,12 @@ const startGameEnabled = (players) => {
   if (!players) {
     return false
   }
-  const allHasThrownNotes = players.every(player => player.notes && player.notes.length)
-  const teamsHaveTwoPlayersEach = players.filter(player => player.team === 'fire').length > 1 && players.filter(player => player.team === 'ice').length > 1
 
-  return allHasThrownNotes && players.length > 3 && teamsHaveTwoPlayersEach
+  const allHasThrownNotes = players.every(player => player.notes && player.notes.length)
+  const teamsHaveTwoPlayersEach = players.filter(player => player.team === 'fire').length >= 2 &&
+    players.filter(player => player.team === 'ice').length >= 2
+
+  return allHasThrownNotes && teamsHaveTwoPlayersEach
 }
 
 export default (state, actions) => h('div', { class: 'player-list flex' }, [
@@ -26,7 +28,7 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
       ]),
       h('ul', { class: 'player-list__players' }, [
         state.players && state.players.length
-          ? state.players.filter(player => player.team === 'fire').map((player) => Player(state, actions, player))
+          ? state.players.filter(player => player.team === 'fire' && player.name).map((player) => Player(state, actions, player))
           : null
       ])
     ]),
@@ -40,7 +42,7 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
       ]),
       h('ul', { class: 'player-list__players' }, [
         state.players && state.players.length
-          ? state.players.filter(player => player.team === 'ice').map((player) => Player(state, actions, player))
+          ? state.players.filter(player => player.team === 'ice' && player.name).map((player) => Player(state, actions, player))
           : null
       ])
     ])
