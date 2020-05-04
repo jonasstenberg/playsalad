@@ -7,8 +7,9 @@ const startGameEnabled = (players) => {
     return false
   }
   const allHasThrownNotes = players.every(player => player.notes && player.notes.length)
+  const teamsHaveTwoPlayersEach = players.filter(player => player.team === 'fire').length > 1 && players.filter(player => player.team === 'ice').length > 1
 
-  return allHasThrownNotes && Object.keys(players).length > 3
+  return allHasThrownNotes && players.length > 3 && teamsHaveTwoPlayersEach
 }
 
 export default (state, actions) => h('div', { class: 'player-list flex' }, [

@@ -6,7 +6,7 @@ import PlayerList from './PlayerList'
 import ThrowNames from './ThrowNames'
 
 export default (state, actions) => h('div', {
-  class: 'lobby',
+  class: 'lobby flex',
   oncreate: () => {
     if (!state.room || !state.room.roomId) {
       console.log('redirecting')
