@@ -70,6 +70,19 @@ export default {
     }
   },
 
+  leaveRoom: () => async (state) => {
+    await fetch(`${backendBaseUrl}/rooms/leave`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        clientId: state.clientId,
+        roomId: state.room.roomId
+      })
+    })
+  },
+
   updatePlayer: (player) => async (state) => {
     await fetch(`${backendBaseUrl}/players`, {
       method: 'PUT',

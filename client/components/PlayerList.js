@@ -25,7 +25,7 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
       ]),
       h('ul', { class: 'player-list__players' }, [
         state.players && state.players.length
-          ? state.players.filter(player => player.team === 'fire').map((player) => Player(state, player))
+          ? state.players.filter(player => player.team === 'fire').map((player) => Player(state, actions, player))
           : null
       ])
     ]),
@@ -39,7 +39,7 @@ export default (state, actions) => h('div', { class: 'player-list flex' }, [
       ]),
       h('ul', { class: 'player-list__players' }, [
         state.players && state.players.length
-          ? state.players.filter(player => player.team === 'ice').map((player) => Player(state, player))
+          ? state.players.filter(player => player.team === 'ice').map((player) => Player(state, actions, player))
           : null
       ])
     ])

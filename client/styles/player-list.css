@@ -59,3 +59,16 @@
   height: 1.375rem;
   margin-left: 0.5rem;
 }
+
+.player-list__switch {
+  padding: 0;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  background: none;
+  border: 0.125rem solid transparent;
+  border-radius: 50em;
+}
+
+.player-list__switch-image {
+  height: 0.9375rem;
+}

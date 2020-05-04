@@ -254,6 +254,40 @@ app.post('/api/rooms/join', async (req, res) => {
   }
 })
 
+app.post('/api/rooms/leave', async (req, res) => {
+  const { clientId, roomId } = req.body
+
+  try {
+    if (!clientId) {
+      res.sendStatus(HttpStatus.NOT_FOUND)
+      return
+    }
+
+    const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+
+    if (!room) {
+      console.log('No room found with that id')
+      res.sendStatus(HttpStatus.NOT_FOUND)
+      return
+    }
+
+    await db.run('DELETE FROM players WHERE client_id = ?', [clientId])
+
+    const players = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
+
+    if (!players.length) {
+      await db.run('DELETE FROM rooms WHERE room_id = ?', [roomId])
+    }
+
+    broadcast(room, players, 'leaving')
+
+    res.sendStatus(HttpStatus.NO_CONTENT)
+  } catch (err) {
+    console.log(err)
+    res.status(HttpStatus.NOT_FOUND).send(err)
+  }
+})
+
 app.put('/api/rooms', async (req, res) => {
   const { roomId, saladBowl, endTime, gameState } = req.body
 
@@ -282,6 +316,7 @@ app.put('/api/rooms', async (req, res) => {
 
     if (!Object.keys(params).length) {
       console.log('Nothing to update')
+      res.sendStatus(HttpStatus.NO_CONTENT)
       return
     }
 
@@ -312,7 +347,7 @@ app.put('/api/rooms', async (req, res) => {
 })
 
 app.put('/api/players', async (req, res) => {
-  const { clientId, roomId, name, notes } = req.body
+  const { clientId, roomId, name, notes, team } = req.body
 
   try {
     const player = await db.get('SELECT * FROM players WHERE client_id = ?', [clientId])
@@ -333,8 +368,13 @@ app.put('/api/players', async (req, res) => {
       params.$notes = JSON.stringify(notes)
     }
 
+    if (team) {
+      params.$team = team
+    }
+
     if (!Object.keys(params).length) {
       console.log('Nothing to update')
+      res.sendStatus(HttpStatus.NO_CONTENT)
       return
     }
 

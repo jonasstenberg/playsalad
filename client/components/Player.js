@@ -1,6 +1,6 @@
 import { h } from 'hyperapp'
 
-export default (state, player) => h('li', {
+export default (state, actions, player) => h('li', {
   class: `player-list__player
     ${player.clientId === state.clientId ? ' player-list__player--current' : ''}
     ${player.clientId === state.room.ownerId ? ' player-list__player--host' : ''}`
@@ -12,5 +12,16 @@ export default (state, player) => h('li', {
   h('span', {}, player.name),
   player.clientId === state.room.ownerId
     ? h('img', { src: '/images/chef.svg', class: 'player-list__host-image' })
+    : null,
+  state.clientId === state.room.ownerId
+    ? h('button', {
+      class: 'player-list__switch',
+      onclick: async () => {
+        await actions.updatePlayer({
+          clientId: player.clientId,
+          team: player.team === 'fire' ? 'ice' : 'fire'
+        })
+      }
+    }, h('img', { src: '/images/switch.svg', class: 'player-list__switch-image' }))
     : null
 ])

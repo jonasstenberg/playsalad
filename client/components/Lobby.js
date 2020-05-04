@@ -6,7 +6,7 @@ import PlayerList from './PlayerList'
 import ThrowNames from './ThrowNames'
 
 export default (state, actions) => h('div', {
-  class: 'lobby flex',
+  class: 'lobby',
   oncreate: () => {
     if (!state.room || !state.room.roomId) {
       console.log('redirecting')
@@ -16,7 +16,20 @@ export default (state, actions) => h('div', {
 }, [
   h('div', { class: 'lobby__header' }, [
     h('div', { class: 'lobby__heading caption' }, 'Game Room'),
-    h('h1', { class: 'lobby__heading' }, state.room && state.room.roomId ? state.room.roomId : null)
+    h('h1', { class: 'lobby__heading' }, state.room && state.room.roomId ? state.room.roomId : null),
+    h('button', {
+      class: 'lobby__close',
+      onclick: async () => {
+        await actions.leaveRoom()
+        actions.location.go('/')
+      }
+    }, [
+      h('img', {
+        class: 'lobby__close-image',
+        src: '/images/close.svg'
+      }),
+      h('div', { class: 'lobby__close-text' }, 'exit')
+    ])
   ]),
   h(Route, {
     path: '/lobby/choose-name',
