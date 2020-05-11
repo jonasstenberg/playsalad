@@ -148,7 +148,7 @@ router.post('/leave', async (req, res) => {
       await db.run('DELETE FROM rooms WHERE room_id = ?', [roomId])
     }
 
-    if (roomCheck.ownerId === clientId) {
+    if (roomCheck.ownerId === clientId && players.length) {
       await db.run('UPDATE rooms SET owner_id = ? WHERE room_id = ?', [players[0].clientId, roomId])
     }
 

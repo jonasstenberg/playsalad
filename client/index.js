@@ -56,39 +56,45 @@ const calculateRemainingTime = (endTime, callback) => {
 
 let timerId
 
-wsc.onmessage = (e) => {
+wsc.onmessage = async (e) => {
   const message = JSON.parse(e.data)
-  let ownPlayer
 
-  if (message.room) {
+  const clientId = message.clientId
+  const action = message.action
+  const room = message.room
+  const players = message.players
+
+  let myPlayer
+
+  if (room) {
     if (debug) {
       console.log('updating room')
-      console.log(message.room)
+      console.log(room)
     }
-    wiredActions.setRoom(message.room)
+    wiredActions.setRoom(room)
   }
-  if (message.players) {
+  if (players) {
     if (debug) {
       console.log('updating player')
-      console.log(message.players)
+      console.log(players)
     }
-    wiredActions.setPlayers(message.players)
-    ownPlayer = message.players.find(p => p.clientId === uid)
+    wiredActions.setPlayers(players)
+    myPlayer = players.find(p => p.clientId === uid)
   }
-  switch (message.action) {
+  switch (action) {
     case 'user':
-      wiredActions.setClientId(message.clientId)
+      wiredActions.setClientId(clientId)
       break
     case 'rejoin':
-      if (message.room.gameState) {
+      if (room.gameState) {
         clearInterval(timerId)
-        if (ownPlayer && ownPlayer.endTime) {
-          timerId = setInterval(() => calculateRemainingTime(ownPlayer.endTime, (distance) => {
+        if (myPlayer && myPlayer.endTime) {
+          timerId = setInterval(() => calculateRemainingTime(myPlayer.endTime, async (distance) => {
             wiredActions.setTimeRemaining(distance)
 
             if (distance < 0) {
               clearInterval(timerId)
-              wiredActions.endTurn({
+              await wiredActions.endTurn({
                 action: 'timesup',
                 gameState: 'timesup'
               })
@@ -108,8 +114,8 @@ wsc.onmessage = (e) => {
       break
     case 'setTimer':
       wiredActions.setTimer()
-      if (message.room.activePlayer === ownPlayer.clientId) {
-        wiredActions.updateRoom({
+      if (room.activePlayer === myPlayer.clientId) {
+        await wiredActions.updateRoom({
           action: 'startTurn',
           gameState: 'round'
         })
@@ -120,13 +126,13 @@ wsc.onmessage = (e) => {
       break
     case 'startTurn':
       clearInterval(timerId)
-      if (ownPlayer && ownPlayer.endTime) {
-        timerId = setInterval(() => calculateRemainingTime(ownPlayer.endTime, (distance) => {
+      if (myPlayer && myPlayer.endTime) {
+        timerId = setInterval(() => calculateRemainingTime(myPlayer.endTime, async (distance) => {
           wiredActions.setTimeRemaining(distance)
 
           if (distance < 0) {
             clearInterval(timerId)
-            wiredActions.endTurn({
+            await wiredActions.endTurn({
               action: 'timesup',
               gameState: 'timesup'
             })
@@ -138,20 +144,22 @@ wsc.onmessage = (e) => {
       break
     case 'timesup':
       clearInterval(timerId)
-      setTimeout(() => {
+      setTimeout(async () => {
         if (debug) {
           console.log('setting round')
         }
-        wiredActions.updateRoom({
-          gameState: 'score'
+        await wiredActions.updateRoom({
+          gameState: 'score',
+          broadcastUpdate: room.activePlayer === myPlayer.clientId
         })
       }, 3000)
       break
     case 'done':
       clearInterval(timerId)
-      setTimeout(() => {
-        wiredActions.updateRoom({
-          gameState: 'intro'
+      setTimeout(async () => {
+        await wiredActions.updateRoom({
+          gameState: 'intro',
+          broadcastUpdate: room.activePlayer === myPlayer.clientId
         })
       }, 3000)
       break

@@ -62,7 +62,7 @@ router.post('/', async (req, res) => {
 })
 
 router.put('/', async (req, res) => {
-  const { roomId, action = 'updateRoom', saladBowl, gameState } = req.body
+  const { roomId, action = 'updateRoom', broadcastUpdate, saladBowl, gameState } = req.body
 
   try {
     const roomCheck = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
@@ -100,7 +100,9 @@ router.put('/', async (req, res) => {
     const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
     const players = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
 
-    broadcast(action, players, { room, players })
+    if (broadcastUpdate) {
+      broadcast(action, players, { room, players })
+    }
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {

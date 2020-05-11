@@ -83,9 +83,6 @@ export default (state, actions) => {
                     console.log('starting turn')
                   }
                   await actions.broadcast('setTimer')
-                  await actions.updatePlayer({
-                    gameState: 'round'
-                  })
                 }
               }, 'Start your turn')
             ]

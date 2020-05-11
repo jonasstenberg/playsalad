@@ -43,6 +43,8 @@ export default {
     }
   },
 
+  setTimeRemaining: timeRemaining => ({ timeRemaining }),
+
   createRoom: (clientId) => async (_, actions) => {
     const res = await fetch(`${backendBaseUrl}/rooms`, {
       method: 'POST',
@@ -109,6 +111,7 @@ export default {
       body: JSON.stringify({
         clientId: state.clientId,
         roomId: state.room.roomId,
+        broadcastUpdate: true,
         ...room
       })
     })
@@ -151,8 +154,6 @@ export default {
       endTime
     })
   },
-
-  setTimeRemaining: timeRemaining => ({ timeRemaining }),
 
   correctGuess: async ({ clientId, roomId, skip }) => {
     await fetch(`${backendBaseUrl}/games/correctGuess`, {
