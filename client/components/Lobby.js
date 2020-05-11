@@ -5,11 +5,15 @@ import ChooseName from './ChooseName'
 import PlayerList from './PlayerList'
 import ThrowNames from './ThrowNames'
 
+import { debug } from '../config'
+
 export default (state, actions) => h('div', {
   class: 'lobby flex',
   oncreate: () => {
     if (!state.room || !state.room.roomId) {
-      console.log('redirecting')
+      if (debug) {
+        console.log('redirecting')
+      }
       actions.location.go('/')
     }
   }

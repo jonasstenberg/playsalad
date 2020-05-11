@@ -1,5 +1,7 @@
 import { h } from 'hyperapp'
 
+import { debug } from '../config'
+
 export default (state, actions) => h('div', {
   class: 'create-join flex',
   oncreate: () => {
@@ -35,7 +37,9 @@ export default (state, actions) => h('div', {
 
           actions.location.go('/lobby/choose-name')
         } catch (err) {
-          console.log('no room with that id')
+          if (debug) {
+            console.log('no room with that id')
+          }
           actions.setErrorText('No Game with that PIN')
         }
       }

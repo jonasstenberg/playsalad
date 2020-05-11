@@ -22,19 +22,20 @@ app.use(morgan(logFormat))
 
 const state = require('./state')
 
-const broadcast = (room, players, action) => {
-  if (players) {
+const broadcast = (action, players, stuff) => {
+  if (Object.keys(stuff).length) {
     players.forEach(player => {
       if (state.connectedClients && state.connectedClients[player.clientId]) {
-        if (typeof room.saladBowl !== 'object') {
-          room.saladBowl = JSON.parse(room.saladBowl)
-        }
-        if (typeof room.playersPlayed !== 'object') {
-          room.playersPlayed = JSON.parse(room.playersPlayed)
+        if (stuff.room) {
+          if (typeof stuff.room.saladBowl !== 'object') {
+            stuff.room.saladBowl = JSON.parse(stuff.room.saladBowl)
+          }
+          if (typeof stuff.room.playersPlayed !== 'object') {
+            stuff.room.playersPlayed = JSON.parse(stuff.room.playersPlayed)
+          }
         }
         state.connectedClients[player.clientId].send(JSON.stringify({
-          room,
-          players,
+          ...stuff,
           action
         }))
       }
@@ -61,7 +62,7 @@ wss.on('connection', async function connection (ws, req) {
       const players = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [deletedPlayer.roomId])
 
       if (room) {
-        broadcast(room, players, 'rejoin')
+        broadcast('rejoin', players, { room, players })
       }
     }
 
@@ -127,7 +128,7 @@ wss.on('connection', async function connection (ws, req) {
         const r = await db.get('SELECT * FROM rooms WHERE room_id = ?', [room.roomId])
         const p = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [room.roomId])
 
-        broadcast(r, p, 'disconnect')
+        broadcast('disconnect', players, { room: r, players: p })
       }
 
       console.log(`Deleted user: ${ws.uuid}`)
@@ -245,7 +246,7 @@ app.post('/api/rooms/join', async (req, res) => {
 
     const players = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
 
-    broadcast(room, players, 'joining')
+    broadcast('joining', players, { players })
 
     res.sendStatus(HttpStatus.OK)
   } catch (err) {
@@ -263,9 +264,9 @@ app.post('/api/rooms/leave', async (req, res) => {
       return
     }
 
-    const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+    const roomCheck = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
 
-    if (!room) {
+    if (!roomCheck) {
       console.log('No room found with that id')
       res.sendStatus(HttpStatus.NOT_FOUND)
       return
@@ -279,7 +280,13 @@ app.post('/api/rooms/leave', async (req, res) => {
       await db.run('DELETE FROM rooms WHERE room_id = ?', [roomId])
     }
 
-    broadcast(room, players, 'leaving')
+    if (roomCheck.ownerId === clientId && players.length) {
+      await db.run('UPDATE rooms SET owner_id = ? WHERE room_id = ?', [players[0].clientId, roomId])
+    }
+
+    const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+
+    broadcast('leaving', players, { room, players })
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -289,15 +296,14 @@ app.post('/api/rooms/leave', async (req, res) => {
 })
 
 app.put('/api/rooms', async (req, res) => {
-  const { roomId, saladBowl, endTime, gameState } = req.body
+  const { roomId, action = 'updateRoom', saladBowl, gameState } = req.body
 
   try {
     const roomCheck = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
 
     if (!roomCheck) {
       console.log(`No room found with that id: ${roomId}`)
-      res.sendStatus(HttpStatus.NOT_FOUND)
-      return
+      throw new Error('Not found')
     }
 
     const params = {}
@@ -306,38 +312,29 @@ app.put('/api/rooms', async (req, res) => {
       params.$saladBowl = JSON.stringify(saladBowl)
     }
 
-    if (endTime) {
-      params.$endTime = endTime
-    }
-
     if (gameState) {
       params.$gameState = gameState
-    }
-
-    if (!Object.keys(params).length) {
-      console.log('Nothing to update')
-      res.sendStatus(HttpStatus.NO_CONTENT)
-      return
     }
 
     const sets = Object.keys(params).map(key => `${camelToSnakeCase(key.replace('$', ''))} = ${key}`)
 
     params.$roomId = roomId
 
-    await db.run(`
-      UPDATE
-        rooms
-      SET
-        ${sets.join(', ')}
-      WHERE
-        room_id = $roomId
-    `, params)
+    if (sets.length) {
+      await db.run(`
+        UPDATE
+          rooms
+        SET
+          ${sets.join(', ')}
+        WHERE
+          room_id = $roomId
+      `, params)
+    }
 
     const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
     const players = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
 
-    // TODO fix startTurn/updateRoom
-    broadcast(room, players, endTime ? 'startTurn' : 'updateRoom')
+    broadcast(action, players, { room, players })
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -391,10 +388,40 @@ app.put('/api/players', async (req, res) => {
         client_id = $clientId
     `, params)
 
-    const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
     const players = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
 
-    broadcast(room, players, 'updatePlayer')
+    broadcast('updatePlayer', players, { players })
+
+    res.sendStatus(HttpStatus.NO_CONTENT)
+  } catch (err) {
+    console.log(err)
+    res.status(HttpStatus.NOT_FOUND).send(err)
+  }
+})
+
+app.post('/api/broadcast', async (req, res) => {
+  const { roomId, action } = req.body
+
+  const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
+  const players = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
+
+  broadcast(action, players, { room, players })
+
+  res.sendStatus(HttpStatus.NO_CONTENT)
+})
+
+app.put('/api/players/setTimer', async (req, res) => {
+  const { clientId, endTime } = req.body
+
+  try {
+    await db.run(`
+      UPDATE
+        players
+      SET
+        end_time = ?
+      WHERE
+        client_id = ?
+    `, [endTime, clientId])
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -453,7 +480,7 @@ app.post('/api/startGame', async (req, res) => {
 
     const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
 
-    broadcast(room, players, 'startGame')
+    broadcast('startGame', players, { room })
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -482,7 +509,8 @@ app.post('/api/correctGuess', async (req, res) => {
     if (!saladBowl || !saladBowl.length) {
       if (room.activeRound === 3) {
         params.$gameState = 'gameover'
-        params.$endTime = null
+
+        await db.run('UPDATE players SET end_time = null WHERE room_id = ?', [roomId])
 
         broadcastAction = 'gameover'
       } else {
@@ -512,7 +540,8 @@ app.post('/api/correctGuess', async (req, res) => {
         params.$activeTeam = randomPlayer.team
         params.$activeWord = activeWord
         params.$saladBowl = JSON.stringify(saladBowl)
-        params.$endTime = null
+
+        await db.run('UPDATE players SET end_time = null WHERE room_id = ?', [roomId])
 
         broadcastAction = 'done'
       }
@@ -549,7 +578,7 @@ app.post('/api/correctGuess', async (req, res) => {
     const r = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
     const p = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
 
-    broadcast(r, p, broadcastAction)
+    broadcast(broadcastAction, p, { room: r, players: p })
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -586,7 +615,6 @@ app.post('/api/timesUp', async (req, res) => {
       $activePlayer: randomPlayer.clientId,
       $playersPlayed: JSON.stringify(playersPlayed),
       $activeTeam: randomPlayer.team,
-      $endTime: null,
       $gameState: 'timesup',
       $skips: state.skipsPerTurn
     }
@@ -604,10 +632,19 @@ app.post('/api/timesUp', async (req, res) => {
       room_id = $roomId
     `, params)
 
+    await db.run(`
+    UPDATE
+      players
+    SET
+      end_time = null
+    WHERE
+      room_id = ?
+    `, [roomId])
+
     const r = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
     const p = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
 
-    broadcast(r, p, 'timesup')
+    broadcast('timesup', p, { room: r, players: p })
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -630,19 +667,18 @@ app.post('/api/resetGame', async (req, res) => {
       active_team = null,
       active_word = null,
       players_played = null,
-      end_time = null,
       skips = 1,
       active_round = 1
     WHERE
       room_id = ?
     `, [roomId])
 
-    await db.run('UPDATE players SET score = 0, notes = null WHERE room_id = ?', [roomId])
+    await db.run('UPDATE players SET score = 0, notes = null, end_time = null WHERE room_id = ?', [roomId])
 
     const r = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
     const p = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
 
-    broadcast(r, p, 'resetGame')
+    broadcast('resetGame', p, { room: r, players: p })
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {

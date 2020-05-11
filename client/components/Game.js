@@ -6,6 +6,8 @@ import GameOver from './GameOver'
 import TimesUp from './TimesUp'
 import EmptyBowl from './EmptyBowl'
 
+import { debug } from '../config'
+
 export default (state, actions) => {
   if (!state.room || !state.players) {
     actions.location.go('/')
@@ -13,7 +15,9 @@ export default (state, actions) => {
   return h('div', {
     class: 'game',
     oncreate: () => {
-      console.log('game', state)
+      if (debug) {
+        console.log('game', state)
+      }
     }
   }, (() => {
     switch (state.room.gameState) {

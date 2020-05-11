@@ -5,6 +5,7 @@ CREATE TABLE players (
   score INTEGER,
   team TEXT,
   notes JSON,
+  end_time DATETIME,
   created DATE DEFAULT (datetime('now','localtime')),
   last_active DATETIME,
   deleted_at DATETIME

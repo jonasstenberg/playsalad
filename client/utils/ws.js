@@ -1,14 +1,13 @@
 /* global WebSocket */
 
+import { debug } from '../config'
+
 export default {
   // Default reconnect interval
   reconnectInterval: 1000,
 
   // Define whether it has ever reconnected
   reconnected: false,
-
-  // Log messages
-  debug: true,
 
   // Open the URL
   open: function (url) {
@@ -24,7 +23,7 @@ export default {
     // Setup the event handler for onopen
     this.instance.onopen = function (ev) {
       // If it has ever reconnected lets say that
-      if (that.reconnected && that.debug) {
+      if (that.reconnected && debug) {
         console.log('[WS]: Reconnected.')
       }
 
@@ -42,7 +41,7 @@ export default {
       switch (e) {
         // Normal closure
         case 1000:
-          if (that.debug) {
+          if (debug) {
             console.log('[WS]: Closed')
           }
           break

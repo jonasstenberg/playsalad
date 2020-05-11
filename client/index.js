@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import state from './state'
 import actions from './actions'
-import { websocketUrl } from './config'
+import { debug, websocketUrl } from './config'
 
 import App from './components/App'
 
@@ -31,11 +31,15 @@ if (sessionStorage.getItem('wsToken')) {
 
 wsc.open(`${websocketUrl}?token=${uid}`)
 wsc.onopen = (e) => {
-  console.log('WebSocketClient connected:', e)
+  if (debug) {
+    console.log('WebSocketClient connected:', e)
+  }
 }
 
 wsc.onclose = (e) => {
-  console.log('WebSocketClient closed:', e)
+  if (debug) {
+    console.log('WebSocketClient closed:', e)
+  }
 }
 
 sessionStorage.setItem('wsToken', uid)
@@ -43,12 +47,9 @@ sessionStorage.setItem('wsToken', uid)
 location.subscribe(wiredActions.location)
 
 const calculateRemainingTime = (endTime, callback) => {
-  if (!endTime) {
-    console.log('endtime not set')
-    return 0
-  }
+  const end = new Date(endTime)
   const now = new Date().getTime()
-  const distance = new Date(endTime).getTime() - now
+  const distance = end.getTime() - now
 
   callback(Math.floor((distance % (1000 * 60)) / 1000))
 }
@@ -57,16 +58,22 @@ let timerId
 
 wsc.onmessage = (e) => {
   const message = JSON.parse(e.data)
+  let ownPlayer
 
   if (message.room) {
-    console.log('updating room')
-    console.log(message.room)
+    if (debug) {
+      console.log('updating room')
+      console.log(message.room)
+    }
     wiredActions.setRoom(message.room)
   }
   if (message.players) {
-    console.log('updating player')
-    console.log(message.players)
+    if (debug) {
+      console.log('updating player')
+      console.log(message.players)
+    }
     wiredActions.setPlayers(message.players)
+    ownPlayer = message.players.find(p => p.clientId === uid)
   }
   switch (message.action) {
     case 'user':
@@ -75,8 +82,8 @@ wsc.onmessage = (e) => {
     case 'rejoin':
       if (message.room.gameState) {
         clearInterval(timerId)
-        if (message.room.endTime) {
-          timerId = setInterval(() => calculateRemainingTime(message.room.endTime, (distance) => {
+        if (ownPlayer && ownPlayer.endTime) {
+          timerId = setInterval(() => calculateRemainingTime(ownPlayer.endTime, (distance) => {
             wiredActions.setTimeRemaining(distance)
 
             if (distance < 0) {
@@ -93,26 +100,39 @@ wsc.onmessage = (e) => {
         actions.location.go('/lobby/player-list')
       }
       break
+    case 'setTimer':
+      wiredActions.setTimer()
+      if (message.room.activePlayer === ownPlayer.clientId) {
+        wiredActions.updateRoom({
+          action: 'startTurn',
+          gameState: 'round'
+        })
+      }
+      break
     case 'startGame':
       actions.location.go('/game')
       break
     case 'startTurn':
       clearInterval(timerId)
-      timerId = setInterval(() => calculateRemainingTime(message.room.endTime, (distance) => {
-        wiredActions.setTimeRemaining(distance)
+      if (ownPlayer && ownPlayer.endTime) {
+        timerId = setInterval(() => calculateRemainingTime(ownPlayer.endTime, (distance) => {
+          wiredActions.setTimeRemaining(distance)
 
-        if (distance < 0) {
-          clearInterval(timerId)
-          wiredActions.timesUp()
-          return
-        }
-        wiredActions.setTimeRemaining(distance)
-      }), 1000)
+          if (distance < 0) {
+            clearInterval(timerId)
+            wiredActions.timesUp()
+            return
+          }
+          wiredActions.setTimeRemaining(distance)
+        }), 1000)
+      }
       break
     case 'timesup':
       clearInterval(timerId)
       setTimeout(() => {
-        console.log('setting round')
+        if (debug) {
+          console.log('setting round')
+        }
         wiredActions.updateRoom({
           gameState: 'round'
         })
@@ -130,12 +150,16 @@ wsc.onmessage = (e) => {
       clearInterval(timerId)
       break
     case 'resetGame':
-      console.log('reseting game')
+      if (debug) {
+        console.log('reseting game')
+      }
       actions.location.go('/lobby/player-list')
       break
   }
 }
 
 wsc.onerror = (error) => {
-  console.log(`WebSocket error: ${error}`)
+  if (debug) {
+    console.log(`WebSocket error: ${error}`)
+  }
 }

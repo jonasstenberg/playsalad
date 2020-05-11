@@ -1,6 +1,6 @@
 import { h } from 'hyperapp'
 
-import { timeout } from '../config'
+import { debug } from '../config'
 
 const teamScore = (players, team) => players
   .reduce((acc, player) => {
@@ -25,13 +25,15 @@ export default (state, actions) => {
   return h('div', {
     class: 'game-round',
     oncreate: () => {
-      console.log('gameround', state)
+      if (debug) {
+        console.log('gameround', state)
+      }
     }
   }, [
     h('div', { class: 'game-round__round caption' }, `Round ${state.room.activeRound}`),
     h('h4', { class: 'game-round__heading' }, `Round ${state.games[state.room.activeRound].name}`),
     (() => {
-      if (!state.room.endTime) {
+      if (!state.player.endTime) {
         return h('div', { class: 'game-round__scores' }, [
           h('div', { class: 'game-round__score-wrapper' }, [
             h('div', { class: 'game-round__team--fire caption' }, [
@@ -58,10 +60,10 @@ export default (state, actions) => {
     })(),
     activePlayer
       ? [
-        state.room.endTime
+        state.player.endTime
           ? h('span', { class: `game-round__word ${state.clientId !== state.room.activePlayer ? ' game-round__word--blurred' : ''}` }, state.room.activeWord)
           : '',
-        state.clientId === state.room.activePlayer && state.room.endTime
+        state.clientId === state.room.activePlayer && state.player.endTime
           ? h('button', {
             class: 'button button--orange',
             onclick: async () => {
@@ -76,35 +78,32 @@ export default (state, actions) => {
         h('div', { class: 'game-round__player-wrapper' }, [
           h('img', {
             src: `/images/${activePlayer.team}.svg`,
-            class: `game-round__current-team-logo ${state.room.endTime ? 'game-round__current-team-logo--small' : ''}`
+            class: `game-round__current-team-logo ${state.player.endTime ? 'game-round__current-team-logo--small' : ''}`
           }),
           h('div', { class: `game-round__current-team-player game-round__current-team-player--${activePlayer.team} ${state.room.endTime ? 'game-round__current-team-player--small' : ''}` }, `${activePlayer.name}`)
         ]),
-        state.room.endTime
+        state.player.endTime
           ? state.timeRemaining >= 0
             ? h('div', {
               oncreate: () => {
-                console.log('oncreate')
+                if (debug) {
+                  console.log('oncreate')
+                }
               }
             }, `${formatTimeRemaining(state.timeRemaining)}`)
             : ''
-          : h('div', { class: 'game-round__zero' }, '00:00'),
-        !state.room.endTime
+          : h('div', { class: 'game-round__zero' }, '1:00'),
+        !state.player.endTime
           ? state.clientId === state.room.activePlayer
             ? [
               h('div', { class: 'game-round__ready' }, 'Are you ready?'),
               h('button', {
                 class: 'button button--orange',
                 onclick: async () => {
-                  console.log('starting turn')
-                  const endTime = new Date()
-                  endTime.setSeconds(endTime.getSeconds() + timeout)
-
-                  await actions.updateRoom({
-                    saladBowl: state.room.saladBowl,
-                    endTime,
-                    gameState: state.room.gameState
-                  })
+                  if (debug) {
+                    console.log('starting turn')
+                  }
+                  await actions.broadcast('setTimer')
                 }
               }, 'Start your turn')
             ]

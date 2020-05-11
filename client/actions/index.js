@@ -1,7 +1,7 @@
 import { location } from '@hyperapp/router'
 import fetch from '../utils/pseudo-fetch'
 
-import { backendBaseUrl } from '../config'
+import { backendBaseUrl, debug } from '../config'
 
 export default {
   location: location.actions,
@@ -32,7 +32,9 @@ export default {
   setRandomNames: randomNames => ({ randomNames }),
 
   setGameState: (gameState) => (state) => {
-    console.log(gameState)
+    if (debug) {
+      console.log(gameState)
+    }
     return {
       room: {
         ...state.room,
@@ -121,6 +123,44 @@ export default {
     })
   },
 
+  broadcast: (action) => async (state) => {
+    await fetch(`${backendBaseUrl}/broadcast`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        roomId: state.room.roomId,
+        action
+      })
+    })
+  },
+
+  setTimer: () => async (state, actions) => {
+    if (state.player.endTime) {
+      return
+    }
+
+    const endTime = new Date()
+    endTime.setSeconds(endTime.getSeconds() + 60)
+
+    await fetch(`${backendBaseUrl}/players/setTimer`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        clientId: state.clientId,
+        endTime
+      })
+    })
+
+    actions.setPlayer({
+      ...state.player,
+      endTime
+    })
+  },
+
   setTimeRemaining: timeRemaining => ({ timeRemaining }),
 
   correctGuess: async ({ clientId, roomId, skip }) => {
@@ -139,7 +179,9 @@ export default {
 
   timesUp: () => async (state) => {
     if (state.clientId === state.room.activePlayer) {
-      console.log('calling times up')
+      if (debug) {
+        console.log('calling times up')
+      }
       await fetch(`${backendBaseUrl}/timesUp`, {
         method: 'POST',
         headers: {

@@ -1,9 +1,13 @@
 import { h } from 'hyperapp'
 
+import { debug } from '../config'
+
 export default (state, actions) => h('div', {
   class: 'game-intro',
   oncreate: () => {
-    console.log('gameintro', state)
+    if (debug) {
+      console.log('gameintro', state)
+    }
   }
 }, [
   h('h1', { class: 'game-intro__heading' }, `Round ${state.room.activeRound}`),
