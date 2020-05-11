@@ -150,9 +150,10 @@ setInterval(() => {
   })
 }, 5000)
 
-app.get('/api/rooms', (req, res) => {
+app.get('/api/rooms', async (req, res) => {
+  const rooms = await db.all('SELECT * FROM rooms')
   res.status(HttpStatus.OK).json({
-    numberOfRooms: state.rooms.length
+    numberOfRooms: rooms.length
   })
 })
 
