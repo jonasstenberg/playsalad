@@ -59,7 +59,7 @@ export default {
   },
 
   joinRoom: async (room) => {
-    const res = await fetch(`${backendBaseUrl}/rooms/join`, {
+    const res = await fetch(`${backendBaseUrl}/players/join`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -73,7 +73,7 @@ export default {
   },
 
   leaveRoom: () => async (state) => {
-    await fetch(`${backendBaseUrl}/rooms/leave`, {
+    await fetch(`${backendBaseUrl}/players/leave`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -114,7 +114,7 @@ export default {
   },
 
   startGame: async (room) => {
-    await fetch(`${backendBaseUrl}/startGame`, {
+    await fetch(`${backendBaseUrl}/games/start`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -164,7 +164,7 @@ export default {
   setTimeRemaining: timeRemaining => ({ timeRemaining }),
 
   correctGuess: async ({ clientId, roomId, skip }) => {
-    await fetch(`${backendBaseUrl}/correctGuess`, {
+    await fetch(`${backendBaseUrl}/games/correctGuess`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -182,7 +182,7 @@ export default {
       if (debug) {
         console.log('calling times up')
       }
-      await fetch(`${backendBaseUrl}/timesUp`, {
+      await fetch(`${backendBaseUrl}/games/timesUp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -195,7 +195,7 @@ export default {
   },
 
   resetGame: () => async (state) => {
-    await fetch(`${backendBaseUrl}/resetGame`, {
+    await fetch(`${backendBaseUrl}/games/reset`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
