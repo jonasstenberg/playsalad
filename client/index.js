@@ -88,7 +88,10 @@ wsc.onmessage = (e) => {
 
             if (distance < 0) {
               clearInterval(timerId)
-              wiredActions.timesUp()
+              wiredActions.endTurn({
+                action: 'timesup',
+                gameState: 'timesup'
+              })
               return
             }
             wiredActions.setTimeRemaining(distance)
@@ -99,6 +102,9 @@ wsc.onmessage = (e) => {
       } else {
         actions.location.go('/lobby/player-list')
       }
+      break
+    case 'leaving':
+      actions.location.go('/lobby/player-list')
       break
     case 'setTimer':
       wiredActions.setTimer()
@@ -120,7 +126,10 @@ wsc.onmessage = (e) => {
 
           if (distance < 0) {
             clearInterval(timerId)
-            wiredActions.timesUp()
+            wiredActions.endTurn({
+              action: 'timesup',
+              gameState: 'timesup'
+            })
             return
           }
           wiredActions.setTimeRemaining(distance)
@@ -134,7 +143,7 @@ wsc.onmessage = (e) => {
           console.log('setting round')
         }
         wiredActions.updateRoom({
-          gameState: 'round'
+          gameState: 'score'
         })
       }, 3000)
       break

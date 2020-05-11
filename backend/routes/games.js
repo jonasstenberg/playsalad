@@ -166,8 +166,8 @@ router.post('/correctGuess', async (req, res) => {
   }
 })
 
-router.post('/timesUp', async (req, res) => {
-  const { roomId } = req.body
+router.post('/endTurn', async (req, res) => {
+  const { roomId, action, gameState } = req.body
 
   try {
     const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
@@ -194,7 +194,7 @@ router.post('/timesUp', async (req, res) => {
       $activePlayer: randomPlayer.clientId,
       $playersPlayed: JSON.stringify(playersPlayed),
       $activeTeam: randomPlayer.team,
-      $gameState: 'timesup',
+      $gameState: gameState,
       $skips: state.skipsPerTurn
     }
 
@@ -223,7 +223,7 @@ router.post('/timesUp', async (req, res) => {
     const r = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
     const p = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
 
-    broadcast('timesup', p, { room: r, players: p })
+    broadcast(action, p, { room: r, players: p })
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {

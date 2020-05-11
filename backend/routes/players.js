@@ -9,7 +9,7 @@ const { broadcast } = require('../utils/ws')
 const router = express.Router()
 
 router.put('/', async (req, res) => {
-  const { clientId, roomId, name, notes, team } = req.body
+  const { clientId, roomId, broadcastUpdate, name, notes, team, endTime } = req.body
 
   try {
     const player = await db.get('SELECT * FROM players WHERE client_id = ?', [clientId])
@@ -34,6 +34,10 @@ router.put('/', async (req, res) => {
       params.$team = team
     }
 
+    if (endTime) {
+      params.$endTime = endTime
+    }
+
     if (!Object.keys(params).length) {
       console.log('Nothing to update')
       res.sendStatus(HttpStatus.NO_CONTENT)
@@ -55,7 +59,9 @@ router.put('/', async (req, res) => {
 
     const players = await db.all('SELECT * FROM players WHERE room_id = ? AND deleted_at IS NULL', [roomId])
 
-    broadcast('updatePlayer', players, { players })
+    if (broadcastUpdate) {
+      broadcast('updatePlayer', players, { players })
+    }
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {
@@ -142,33 +148,17 @@ router.post('/leave', async (req, res) => {
       await db.run('DELETE FROM rooms WHERE room_id = ?', [roomId])
     }
 
-    if (roomCheck.ownerId === clientId && players.length) {
+    if (roomCheck.ownerId === clientId) {
       await db.run('UPDATE rooms SET owner_id = ? WHERE room_id = ?', [players[0].clientId, roomId])
+    }
+
+    if (roomCheck.activePlayer === clientId) {
+      await db.run('UPDATE rooms SET game_state = "score" WHERE room_id = ?', [roomId])
     }
 
     const room = await db.get('SELECT * FROM rooms WHERE room_id = ?', [roomId])
 
     broadcast('leaving', players, { room, players })
-
-    res.sendStatus(HttpStatus.NO_CONTENT)
-  } catch (err) {
-    console.log(err)
-    res.status(HttpStatus.NOT_FOUND).send(err)
-  }
-})
-
-router.put('/setTimer', async (req, res) => {
-  const { clientId, endTime } = req.body
-
-  try {
-    await db.run(`
-      UPDATE
-        players
-      SET
-        end_time = ?
-      WHERE
-        client_id = ?
-    `, [endTime, clientId])
 
     res.sendStatus(HttpStatus.NO_CONTENT)
   } catch (err) {

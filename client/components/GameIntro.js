@@ -27,7 +27,7 @@ export default (state, actions) => h('div', {
   h('button', {
     class: 'button button--orange',
     onclick: () => {
-      actions.setGameState('round')
+      actions.setGameState('score')
     }
   }, 'OK!')
 ])

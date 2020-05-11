@@ -94,6 +94,7 @@ export default {
       body: JSON.stringify({
         clientId: state.clientId,
         roomId: state.room.roomId,
+        broadcastUpdate: true,
         ...player
       })
     })
@@ -137,22 +138,12 @@ export default {
   },
 
   setTimer: () => async (state, actions) => {
-    if (state.player.endTime) {
-      return
-    }
-
     const endTime = new Date()
     endTime.setSeconds(endTime.getSeconds() + 60)
 
-    await fetch(`${backendBaseUrl}/players/setTimer`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        clientId: state.clientId,
-        endTime
-      })
+    actions.updatePlayer({
+      endTime,
+      broadcastUpdate: false
     })
 
     actions.setPlayer({
@@ -177,18 +168,20 @@ export default {
     })
   },
 
-  timesUp: () => async (state) => {
+  endTurn: ({ action, gameState }) => async (state) => {
     if (state.clientId === state.room.activePlayer) {
       if (debug) {
         console.log('calling times up')
       }
-      await fetch(`${backendBaseUrl}/games/timesUp`, {
+      await fetch(`${backendBaseUrl}/games/endTurn`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          roomId: state.room.roomId
+          roomId: state.room.roomId,
+          action,
+          gameState
         })
       })
     }

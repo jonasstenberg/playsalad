@@ -24,6 +24,7 @@
 @import "./game.css";
 @import "./game-intro.css";
 @import "./game-round.css";
+@import "./game-score.css";
 @import "./game-over.css";
 @import "./times-up.css";
 @import "./empty-bowl.css";

@@ -8,3 +8,81 @@
 .game > * {
   width: 100%;
 }
+
+.game__round {
+  margin-top: 1.5rem;
+  color: var(--color-turquoise);
+}
+
+.game__heading {
+  margin-top: 0.5rem;
+  font-weight: normal;
+}
+
+.game__player-wrapper {
+  text-align: center;
+}
+
+.game__current-team-logo {
+  width: 1.5rem;
+  height: auto;
+  margin-top: 2rem;
+}
+
+.game__current-team-logo--small {
+  width: 1rem;
+}
+
+.game__team-logo {
+  width: 0.875rem;
+  height: auto;
+  margin-right: 0.5rem;
+}
+
+.game__team--ice,
+.game__current-team-player--ice {
+  padding-top: 0.354rem;
+  color: var(--color-blue);
+}
+
+.game__team--fire,
+.game__current-team-player--fire {
+  color: var(--color-orange);
+}
+
+.game__close-wrapper {
+  display: flex;
+  justify-content: space-between;
+  margin: 1.5rem;
+}
+
+.game__end-turn {
+  cursor: pointer;
+  background: none;
+  border: 0.125rem solid transparent;
+}
+
+.game__end-turn-image {
+  height: 1rem;
+  margin-right: 0.5rem;
+}
+
+.game__close {
+  width: 1.5rem;
+  padding: 0;
+  margin-right: 0;
+  margin-left: auto;
+  cursor: pointer;
+  background: none;
+  border: 0.125rem solid transparent;
+}
+
+.game__close-image {
+  height: 1.5rem;
+}
+
+.game__close-text {
+  padding-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-white);
+}
