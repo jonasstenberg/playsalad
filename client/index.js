@@ -113,7 +113,7 @@ wsc.onmessage = async (e) => {
       actions.location.go('/lobby/player-list')
       break
     case 'setTimer':
-      wiredActions.setTimer()
+      await wiredActions.setTimer()
       if (room.activePlayer === myPlayer.clientId) {
         await wiredActions.updateRoom({
           action: 'startTurn',
