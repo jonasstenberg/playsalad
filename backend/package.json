@@ -25,6 +25,9 @@
     "stylelint": "stylelint styles/*",
     "stylelint:fix": " stylelint styles/* --fix"
   },
+  "engines": {
+    "node": ">=0.12"
+  },
   "standard": {
     "ignore": [
       "/node_modules/"

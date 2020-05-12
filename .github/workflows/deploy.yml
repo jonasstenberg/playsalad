@@ -1,0 +1,48 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [10.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Cache node modules
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-node-modules
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Install client dependencies
+      working-directory: client
+      run: npm install
+
+    - name: Build client
+      working-directory: client
+      run: npm run build
+
+    - name: Copy to droplet
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.DROPLET_KEY }}" > ~/.ssh/id_rsa
+        chmod 700 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.DROPLET_HOST }} >> ~/.ssh/known_hosts
+        scp -o StrictHostKeyChecking=no -r ./client/dist/* ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_HOST }}:/home/caddy-runner/salad-bowl-client
+        ssh -o StrictHostKeyChecking=no ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_HOST }} 'cd ~/salad-bowl && git pull origin master --rebase && cd backend && npm install && sudo systemctl restart caddy'
