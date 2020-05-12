@@ -38,7 +38,7 @@ setInterval(() => {
 }, 5000)
 
 app.use((req, res, next) => {
-  res.header('Content-Security-Policy', "default-src 'self'; script-src 'self'; object-src 'none'; img-src 'self'; media-src 'self'; frame-src 'none'; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self'; style-src 'self'")
+  res.header('Content-Security-Policy', "default-src 'self'; script-src 'self'; object-src 'none'; img-src 'self'; media-src 'self'; frame-src 'none'; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' ws: wss:; style-src 'self'")
   next()
 })
 
