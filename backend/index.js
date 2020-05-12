@@ -7,7 +7,7 @@ const morgan = require('morgan')
 const WebSocket = require('ws')
 
 const isProduction = process.env.NODE_ENV === 'production'
-const logFormat = isProduction ? 'tiny' : 'dev'
+const logFormat = isProduction ? 'dev' : 'dev'
 
 const db = require('./utils/db')
 const { broadcast, connection } = require('./utils/ws')
