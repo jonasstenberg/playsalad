@@ -144,7 +144,7 @@ export default {
     const endTime = new Date()
     endTime.setSeconds(endTime.getSeconds() + 60)
 
-    actions.updatePlayer({
+    await actions.updatePlayer({
       endTime,
       broadcastUpdate: false
     })
