@@ -18,8 +18,8 @@
   padding: 0;
   cursor: pointer;
   background: none;
-  border: 0.125rem solid transparent;
-  border-radius: 50em;
+  border: 0;
+  border-radius: 0;
 }
 
 .lobby__close-image {
