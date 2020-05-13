@@ -4,7 +4,7 @@
 
 .create-join__brag {
   margin: 1rem 0 0 0;
-  color: var(--color-gray);
+  color: var(--color-mid-gray);
 }
 
 .create-join__join {
@@ -21,10 +21,10 @@
 
 .create-join__rules {
   display: flex;
-  align-items: center;
   justify-content: center;
   width: 100%;
   padding: 1rem;
+  cursor: pointer;
   background-color: #e6ebe0;
 }
 
@@ -32,6 +32,10 @@
   margin: 0 0.5rem;
 }
 
+.create-join__rules-book {
+  width: 1.625rem;
+}
+
 .create-join__rules-arrow {
-  margin-top: 0.25rem;
+  margin-top: -0.125rem;
 }

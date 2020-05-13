@@ -12,11 +12,15 @@ export default (state, actions) => h('div', {
   }
 }, [
   h('div', { class: 'create-join__join' }, [
-    h('img', { src: '/images/logo-orange.svg' }),
+    h('img', {
+      src: '/images/logo-orange.svg',
+      alt: 'Salad bowl logo'
+    }),
     h('p', { class: 'create-join__brag caption' }, 'Millions of games played worldwide'),
     h('input', {
       class: 'create-join__input input input--orange',
       placeholder: 'Game PIN',
+      'aria-label': 'Enter game PIN',
       oninput: evt => {
         if (evt.target.value.length <= 4) {
           actions.setRoom({
@@ -61,10 +65,15 @@ export default (state, actions) => h('div', {
       actions.location.go('/rules')
     }
   }, [
-    h('img', { src: '/images/rule-book.svg' }),
-    h('span', { class: 'create-join__rules-text' }, 'Game rules'),
+    h('img', {
+      src: '/images/rule-book.svg',
+      alt: 'Game rule book',
+      class: 'create-join__rules-book'
+    }),
+    h('span', { class: 'create-join__rules-text' }, 'game rules'),
     h('img', {
       src: '/images/arrow-right.svg',
+      alt: 'Arrow right',
       class: 'create-join__rules-arrow'
     })
   ])
