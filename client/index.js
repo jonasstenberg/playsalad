@@ -7,19 +7,30 @@ import { v4 as uuidv4 } from 'uuid'
 import state from './state'
 import actions from './actions'
 import { debug, websocketUrl } from './config'
-
 import App from './components/App'
-
 import wsc from './utils/ws'
+
+const devtools = process.env.NODE_ENV !== 'production'
+  ? require('hyperapp-redux-devtools')
+  : null
 
 require('@babel/polyfill')
 
-const wiredActions = app(
+let main
+if (devtools) {
+  main = devtools(app)
+} else {
+  main = app
+}
+
+const wiredActions = main(
   state,
   actions,
   App,
   document.getElementById('app')
 )
+
+console.log(wiredActions)
 
 let uid
 if (sessionStorage.getItem('wsToken')) {
