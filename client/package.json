@@ -5,6 +5,7 @@
   "main": "app.js",
   "dependencies": {
     "@babel/core": "^7.9.0",
+    "@babel/polyfill": "^7.10.1",
     "@hyperapp/router": "^0.7.2",
     "hyperapp": "^1.2.5",
     "hyperapp-redux-devtools": "^1.1.6",
