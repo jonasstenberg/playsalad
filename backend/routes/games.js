@@ -9,6 +9,17 @@ const { broadcast } = require('../utils/ws')
 
 const router = express.Router()
 
+const getNextPlayer = (players, playersPlayed, activeTeam) => {
+  const playersNotPlayed = players.filter(p => !playersPlayed.includes(p.clientId))
+  const oppositeTeamPlayers = playersNotPlayed.filter(p => p.team !== activeTeam)
+
+  if (oppositeTeamPlayers.length) {
+    return oppositeTeamPlayers[Math.floor(Math.random() * oppositeTeamPlayers.length)]
+  }
+
+  return playersNotPlayed[Math.floor(Math.random() * playersNotPlayed.length)]
+}
+
 router.post('/start', async (req, res) => {
   const { roomId } = req.body
 
@@ -24,10 +35,10 @@ router.post('/start', async (req, res) => {
     }, [])
     const gameState = 'intro'
 
-    const randomPlayer = players[Math.floor(Math.random() * players.length)]
-    const activePlayer = randomPlayer.clientId
-    const playersPlayed = [randomPlayer.clientId]
-    const activeTeam = randomPlayer.team
+    const nextPlayer = players[Math.floor(Math.random() * players.length)]
+    const activePlayer = nextPlayer.clientId
+    const playersPlayed = [nextPlayer.clientId]
+    const activeTeam = nextPlayer.team
     const activeWord = saladBowl.splice(Math.floor(Math.random() * saladBowl.length), 1)[0]
     const skips = state.skipsPerTurn
 
@@ -109,14 +120,13 @@ router.post('/correctGuess', async (req, res) => {
           playersPlayed = []
         }
 
-        const filteredPlayers = players.filter(p => !playersPlayed.includes(p.clientId))
-        const randomPlayer = filteredPlayers[Math.floor(Math.random() * filteredPlayers.length)]
-        playersPlayed.push(randomPlayer.clientId)
+        const nextPlayer = getNextPlayer(players, playersPlayed, room.activeTeam)
+        playersPlayed.push(nextPlayer.clientId)
         const activeWord = saladBowl.splice(Math.floor(Math.random() * saladBowl.length), 1)[0]
 
-        params.$activePlayer = randomPlayer.clientId
+        params.$activePlayer = nextPlayer.clientId
         params.$playersPlayed = JSON.stringify(playersPlayed)
-        params.$activeTeam = randomPlayer.team
+        params.$activeTeam = nextPlayer.team
         params.$activeWord = activeWord
         params.$saladBowl = JSON.stringify(saladBowl)
 
@@ -180,10 +190,9 @@ router.post('/endTurn', async (req, res) => {
       playersPlayed = []
     }
 
-    const filteredPlayers = players.filter(p => !playersPlayed.includes(p.clientId))
-    const randomPlayer = filteredPlayers[Math.floor(Math.random() * filteredPlayers.length)]
+    const nextPlayer = getNextPlayer(players, playersPlayed, room.activeTeam)
 
-    playersPlayed.push(randomPlayer.clientId)
+    playersPlayed.push(nextPlayer.clientId)
     saladBowl.push(room.activeWord)
 
     const activeWord = saladBowl.splice(Math.floor(Math.random() * saladBowl.length), 1)[0]
@@ -191,9 +200,9 @@ router.post('/endTurn', async (req, res) => {
     const params = {
       $activeWord: activeWord,
       $saladBowl: JSON.stringify(saladBowl),
-      $activePlayer: randomPlayer.clientId,
+      $activePlayer: nextPlayer.clientId,
       $playersPlayed: JSON.stringify(playersPlayed),
-      $activeTeam: randomPlayer.team,
+      $activeTeam: nextPlayer.team,
       $gameState: gameState,
       $skips: state.skipsPerTurn
     }
