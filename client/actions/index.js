@@ -16,16 +16,7 @@ export default {
 
   setRoom: room => ({ room }),
 
-  setPlayers: players => (state, actions) => {
-    const player = players.find(player => player.clientId === state.clientId)
-    if (player) {
-      actions.setPlayer(player)
-    }
-
-    return {
-      players
-    }
-  },
+  setPlayers: players => ({ players }),
 
   setPlayer: player => ({ player }),
 

@@ -91,6 +91,7 @@ wsc.onmessage = async (e) => {
     }
     wiredActions.setPlayers(players)
     myPlayer = players.find(p => p.clientId === uid)
+    wiredActions.setPlayer(myPlayer)
   }
   switch (action) {
     case 'user':
