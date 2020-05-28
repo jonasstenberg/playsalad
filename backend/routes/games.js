@@ -98,9 +98,9 @@ router.post('/correctGuess', async (req, res) => {
 
     if (!saladBowl || !saladBowl.length) {
       if (room.activeRound === 3) {
-        params.$gameState = 'gameover'
-
         await db.run('UPDATE players SET end_time = null WHERE room_id = ?', [roomId])
+
+        params.$gameState = 'gameover'
 
         broadcastAction = 'gameover'
       } else {
@@ -111,10 +111,6 @@ router.post('/correctGuess', async (req, res) => {
           }
           return acc
         }, [])
-        params.$activeRound = room.activeRound + 1
-        params.$gameState = 'done'
-        // TODO replace with config
-        params.$skips = state.skipsPerTurn
 
         if (playersPlayed.length === players.length) {
           playersPlayed = []
@@ -122,13 +118,18 @@ router.post('/correctGuess', async (req, res) => {
 
         const nextPlayer = getNextPlayer(players, playersPlayed, room.activeTeam)
         playersPlayed.push(nextPlayer.clientId)
+
         const activeWord = saladBowl.splice(Math.floor(Math.random() * saladBowl.length), 1)[0]
 
+        params.$activeRound = room.activeRound + 1
         params.$activePlayer = nextPlayer.clientId
         params.$playersPlayed = JSON.stringify(playersPlayed)
         params.$activeTeam = nextPlayer.team
         params.$activeWord = activeWord
         params.$saladBowl = JSON.stringify(saladBowl)
+        // TODO replace with config
+        params.$skips = state.skipsPerTurn
+        params.$gameState = 'done'
 
         await db.run('UPDATE players SET end_time = null WHERE room_id = ?', [roomId])
 
