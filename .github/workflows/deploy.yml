@@ -3,7 +3,8 @@ name: Deploy
 on:
   push:
     branches:
-      - master
+      - maste
+  workflow_dispatch:
 
 jobs:
   build:
@@ -30,19 +31,27 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-node-
 
+    - name: Install backend dependencies
+      working-directory: backend
+      run: npm ci
+
     - name: Install client dependencies
       working-directory: client
-      run: npm install
+      run: npm ci
 
     - name: Build client
       working-directory: client
       run: npm run build
 
-    - name: Copy to droplet
+    - name: Deploy
+      env:
+        DOMAIN: playsalad.com
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.DROPLET_KEY }}" > ~/.ssh/id_rsa
-        chmod 700 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.DROPLET_HOST }} >> ~/.ssh/known_hosts
-        scp -o StrictHostKeyChecking=no -r ./client/dist/* ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_HOST }}:/home/caddy-runner/salad-bowl-client
-        ssh -o StrictHostKeyChecking=no ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_HOST }} 'cd ~/salad-bowl && git pull origin master --rebase && cd backend && npm install && sudo systemctl restart caddy'
+        echo "${{ secrets.APP_SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H $DOMAIN >> ~/.ssh/known_hosts
+        ssh -o StrictHostKeyChecking=no root@$DOMAIN "mkdir -p /usr/local/bin/$DOMAIN && mkdir -p /usr/local/bin/$DOMAIN-api"
+        rsync --delete -azrv ./client/dist root@$DOMAIN:/usr/local/bin/$DOMAIN
+        rsync --delete -azrv ./backend/ root@$DOMAIN:/usr/local/bin/$DOMAIN-api
+        ssh -o StrictHostKeyChecking=no root@$DOMAIN 'systemctl restart caddy && systemctl restart playsalad'

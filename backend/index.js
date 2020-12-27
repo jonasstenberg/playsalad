@@ -57,7 +57,7 @@ app.post('/api/broadcast', async (req, res) => {
   res.sendStatus(HttpStatus.NO_CONTENT)
 })
 
-server.listen(process.env.PORT || 8080, () => {
+server.listen(process.env.PORT || 8081, () => {
   console.log(`Server started on port ${server.address().port}`)
 })
 
